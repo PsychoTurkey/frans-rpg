@@ -94,7 +94,7 @@ class creature:
 	def teleport(self, x, y):
 		try:
 			locations[self.x][self.y].populationRemove(self.id)
-		except Exception:
+		except Exception: #Excess
 			pass
 		locations[x][y].populationAdd(self.id)
 		self.x = x
@@ -128,7 +128,7 @@ class creature:
 				if min == 0:
 					min = 1
 				max = self.damage - target.armor
-				damage = randint(min, max)
+				damage = randint(min, max) #What if max == 0?
 				target.hp -= damage
 				message = self.name + " dealt " + str(damage) + " damage to " + target.name + ". "
 				if target.hp <= 0:
@@ -195,7 +195,7 @@ class inventory:
 	def gainItem(self, itemId):
 		if not itemId in self.inventory:
 			self.inventory += itemId
-	
+
 	def dropItem(self, itemId):
 		if itemId in self.inventory:
 			self.inventory.pop(self.inventory.index(id))
@@ -229,7 +229,7 @@ class player(creature, inventory):
 			return "You passed an invalid direction! "
 		fleeChance = 0
 		for i in locations[self.x][self.y].population:
-			fleeChance += creatures[i].level
+			fleeChance += creatures[i].level 
 		if not fleeChance:
 			fleeChance = 1
 		fleeChance = self.level / fleeChance
@@ -341,7 +341,7 @@ class player(creature, inventory):
 				if level > 100:
 					level = 100
 				lower = round(level / 100 * len(locationTypes[curLoc.locationType])) - 3
-				upper = round(level / 100 * len(locationTypes[curLoc.locationType])) + 3
+				upper = round(level / 100 * len(locationTypes[curLoc.locationType])) + 3 #What if upper too high?
 				if lower < 0:
 					lower = 0
 				creatures[enemyId] = creature(self.x, self.y, enemyId, choice(locationTypes[curLoc.locationType][lower : upper]), level)
@@ -358,7 +358,7 @@ class player(creature, inventory):
 				self.equipped[1] = itemId
 				self.armor = items[itemId].effect
 		else:
-			return "You have to be level " + str(items[itemId].level) + " to use this item."
+			return "You have to be at least level " + str(items[itemId].level) + " to use this item."
 	
 	def unequip(self, itemId):
 		if items[itemId].itemType == "Weapon":
@@ -369,11 +369,11 @@ class player(creature, inventory):
 			self.armor = 0
 			
 class item:
-	def __init__(self, id, name, itemType, value, owner, inventoryId):
+	def __init__(self, id, name, itemType, value, owner, inventoryId): #No effect? No level?
 		self.id = id
 		self.name = name
 		self.value = value
-		self.effect = effect
+		self.effect = effect #No level?
 		self.owner = owner
 		self.inventoryId = inventoryId
 	
@@ -385,9 +385,9 @@ class item:
 	#def market(self, price):
 
 class healingItem(item):
-	def __init__(self, id, name, level, value, effect, owner, inventoryId):
+	def __init__(self, id, name, level, value, effect, owner, inventoryId): #Excess level?
 		item.__init__(self, id, name, "Healing Item", value, owner, inventoryId)
-		self.effect = effect
+		self.effect = effect #Double effect?
 		
 	def use(self, userId):
 		if userId == inventoryId:
@@ -400,8 +400,8 @@ class healingItem(item):
 class armor(item):
 	def __init__(self, id, name, level, value, effect, owner, inventoryId):
 		item.__init__(self, id, name, "Armor", value, owner, inventoryId)
-		self.level = level
-		self.effect = effect
+		self.level = level #Double level?
+		self.effect = effect #Double effect?
 		
 	def use(self, userId):
 		if userId == inventoryId:
@@ -436,12 +436,12 @@ def stats(bot, update, args):
 		else:
 			sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
 	
-def locationInfo(bot, update, args):
+def locationInfo(bot, update, args): #Individual locations?
 	if args:
 		id = args[0]
 		if id in creatures:
 			sendMessage(bot, update, locations[creatures[id].x][creatures[id].y].info())
-		elif id in locations:
+		elif id in locations: #???
 			sendMessage(bot, update, locations[id].info())
 		else:
 			sendMessage(bot, update, "There is no player named like that.")
@@ -530,7 +530,7 @@ def deposit(bot, update, args):
 		try:
 			amount = int(args[0])
 			if amount <= creatures[id].gold:
-				sendMessage(bot, update, "depositd " + str(amount) + " gold.")
+				sendMessage(bot, update, "deposited " + str(amount) + " gold.")
 				bank[id] += amount
 				creatures[id].gold -= amount
 			else:
@@ -621,7 +621,7 @@ def load(bot, update):
 			pass
 		
 def do(bot, update, args):
-	if getName(update) == "Storm":
+	if getName(update) == "Storm": #id instead of name
 		try:
 			text = str(eval(str(" ".join(args))))
 		except:
@@ -631,7 +631,7 @@ def do(bot, update, args):
 		sendMessage(bot, update, "You have to be Storm for that.")
 	
 def reset(bot, update):
-	if getName(update) == "Storm":
+	if getName(update) == "Storm": #Id instead of name
 		global creatures
 		global items
 		global locations
@@ -713,12 +713,13 @@ def newItemName(type, level):
 		itemsNouns = armorItems
 		itemsAdj = armorItemsAdj
 	name = ""
-	itemLower = round(level / 100 * len(itemsNouns)) - 3 #Ratio of current level to max level -> ratio of nth healing item to all healing items
+	itemLower = round(level / 100 * len(itemsNouns)) - 3 #Ratio of current level to max level -> ratio of nth item to all items
 	itemUpper = round(level / 100 * len(itemsNouns)) + 3
 	if itemLower < 0:
 		itemLower = 0
 	if itemUpper > len(itemsNouns):
 		itemLower = len(itemsNouns) - 10 #Extra items when near max level
+			#itemUpper = len(itemsNouns)?? 
 
 	adjLower = round(level / 100 * len(itemsAdj)) - 5
 	adjUpper = round(level / 100 * len(itemsAdj)) + 5
@@ -726,6 +727,7 @@ def newItemName(type, level):
 		adjLower = 0
 	if adjUpper > len(itemsAdj):
 		adjLower = len(itemsAdj) - 15 #Extra Adj near when max level
+		#same as at itemsUpper
 	adj = ""
 	for i in range(randint(1, 2) + round(level / 33)): #Min 1, max 5 Adj
 		while adj in name:
@@ -844,8 +846,8 @@ def main():
 	dispatcher.addTelegramCommandHandler("viewstore", viewStore)
 	
 	newLocation(0, 0, "Cromania", 1)
-	getId
-	creatures[storeObject.id] = storeObject
+	getId #???
+	creatures[storeObject.id] = storeObject #??? Does this work?
 	
 	updater.start_polling()
 
