@@ -3,9 +3,7 @@ To do:
 """
 
 from telegram import Updater
-from random import random
-from random import choice
-from random import randint
+from random import random, choice, randint
 import pickle
 import logging
 
