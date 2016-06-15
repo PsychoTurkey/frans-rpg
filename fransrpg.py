@@ -28,9 +28,11 @@ armorItemsAdj = ['Old', 'Broken', 'Gross', 'Skin', 'Pre Historic', 'Ripped', 'Un
 locations = {} #Multidimensional dictionary with coordinates and their location objects {x : {y : object}}
 creatures = {} #All creature id's and their objects {id : object}. Contains players as well.
 bank = {} #Bank-stored gold for each player {id : amount}
-ids = [True] #Remembers currently taken ids for items and NPCs, False means taken. Doesn't contain players.
+ids = [True] #Remembers currently taken ids for items and NPCs, False means taken. Doesn't contain players. 
 messageCount = 0 #Keeps track of number of send messages, saves after every 20.
 items = {} #Items dictionary {id : object}
+
+#References to creatures, locations etc. cannot be real object-references because of troubles with saving to file. Instead, coordinates, id numbers or strings are used.
 
 #classes
 class location:
@@ -75,19 +77,19 @@ class location:
 
 class creature:
 	def __init__(self, x, y, id, creatureType, level):	
-		self.x = x
+		self.x = x #Initial location
 		self.y = y
 		self.id = id
 		self.level = level
 		locations[x][y].populationAdd(self.id)
-		self.creatureType = creatureType # The creature name, for players it's "Player" to distinct players and NPCs.
+		self.creatureType = creatureType #The creature name, for players it's "Player" to distinct players and NPCs.
 		self.name = self.creatureType
-		first = self.name[0].lower() # Should it be reffered to with "a" or "an"?
+		first = self.name[0].lower() #Should it be reffered to with "a" or "an"?
 		if first == "a" or first == "e" or first == "i" or first == "o" or first == "u":
 			self.n = "n"
 		else:
 			self.n = ""
-		self.maxHp = getLevelHp(level)
+		self.maxHp = getLevelHp(level) #hp cannot exceed this value, based the creature's level.
 		self.hp = self.maxHp
 		self.damage = getItemEffect("Weapon", level) #NPCs get weapon and armor ratings as if they had weapons of their own level
 		self.armor = getItemEffect("Armor", level)
@@ -114,39 +116,38 @@ class creature:
 			locations[self.x][self.y].populationRemove(self.id)
 			del creatures[self.id]
 			
-	def attack(self, targetId): #Checks if attack is possible, subtracts a certain damage, handles death and rewards
-		fightBack = False #If a NPC is attacked and does not die, it will attack back once.
+	def attack(self, targetId): #Checks if attack is possible, subtracts a certain damage, handles death and rewards.
 		if self.x == 0 and self.y == 0:
-			return ["You can't fight when in Cromania. ", fightBack]
-		if targetId in locations[self.x][self.y].players: #If the target is a player and in the right location:
+			return ["You can't fight when in Cromania. ", False] #The return value is checked for the message and whether the victim fights back (only if the victim is a NPC and doesn't die).
+		if targetId in locations[self.x][self.y].players: #If the target is a player and in the right location...
 			target = creatures[targetId]
 			if self == target:
 				self.die()
-				return ["You commited suïcide and lost all your gold. ", fightBack]
-			if self.damage > target.armor: #Ignore if the damage isn't greater than the target's armor
+				return ["You commited suïcide and lost all your gold. ", False]
+			if self.damage > target.armor: #Ignore if the damage isn't greater than the target's armor.
 				min = round((self.damage - target.armor)/2)
 				if min == 0:
-					min = 1 #At least one damage point
+					min = 1 #At least one damage point.
 				max = self.damage - target.armor
 				damage = randint(min, max)
 				target.hp -= damage
 				message = self.name + " dealt " + str(damage) + " damage to " + target.name + ". "
 				if target.hp <= 0:
 					message += self.name + " killed " + target.name + "! "
-					if self.creatureType == "Player":
-						self.gold += target.gold
-						self.playerKills += 1
+					if self.creatureType == "Player": #If the attacker is a player:
+						self.gold += target.gold #Get victim's gold. Victim loses it througth their die() method.
+						self.playerKills += 1 #Keep track of the number of players someone killed.
 						message += "You took all gold (" + str(target.gold) + ") from " + target.name + ". "
-					if self.creatureType == "Player" and target.level - self.level >= -4:
-						message += self.gainXp(round(0.5 * (target.level - self.level + 6) ** 1.5))
+					if self.creatureType == "Player" and target.level - self.level >= -4: #Don't get xp when an enemy has a much lower level.
+						message += self.gainXp(round(0.5 * (target.level - self.level + 6) ** 1.5)) #Gain xp by some formula based on both levels
 					target.die()
 				else:
 					message += target.name + " still has " + str(target.hp) + " health. "
 			else:
-				return [target.name + " absorbed all damage... ", fightBack]
+				return [target.name + " absorbed all damage... ", False]
 		
-		elif targetId in locations[self.x][self.y].population:
-			fightBack = True
+		elif targetId in locations[self.x][self.y].population: #...or a NPC in the right location:
+			fightBack = True #If a NPC is attacked and does not die, it will attack back.
 			target = creatures[targetId]
 			if self.damage > target.armor:
 				min = round((self.damage - target.armor)/2)
@@ -159,7 +160,7 @@ class creature:
 				if target.hp <= 0:
 					message += self.name + " killed the " + target.name + "! "
 					self.kills += 1
-					message += getReward(self, target.level)
+					message += getReward(self, target.level) #Get a randomly generated reward base on the victim's level.
 					fightBack = False
 					if self.creatureType == "Player" and target.level - self.level >= -4:
 						message += self.gainXp(round(0.5 * (target.level - self.level + 6) ** 1.5))
@@ -173,12 +174,12 @@ class creature:
 			return ["Target doesn't exist in this location. ", fightBack]
 		return [message, fightBack]
 		
-	def heal(self, amount):
+	def heal(self, amount): #Add HP and reset if the result exceeds maxHp.
 		self.hp += amount
 		if self.hp > self.maxHp:
 			self.hp = maxHp
 	
-	def stats(self):
+	def stats(self): #Print the creature's stats.
 		return "Name: " + self.name + \
 			"\nId: " + str(self.id) + \
 			"\nLevel: " + str(self.level) + \
