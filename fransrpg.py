@@ -1,7 +1,4 @@
-"""
-To do:
-"""
-
+#Imports
 from telegram import Updater
 from random import random
 from random import choice
@@ -9,14 +6,18 @@ from random import randint
 import pickle
 import logging
 
+#Telegram bot log
 logging.basicConfig(
 		format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
 		level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+#Dict with LocationTypeName : [all possible NPCs]	The enemies list is in order from weak to strong
 locationTypes = {"Mountain": ['Worm', 'Moon Moon', 'Feral Frog', 'Feral Rock', 'Feral Cough', 'Squirrel', 'Flat Hat', 'Flop Hat', 'Old Computerscreen', 'Cloud', 'Fluffy Cloud', 'Head', 'Sneeze', 'Pile Of Snow', 'Old Summer Breeze', 'FatCat', 'Plofkip', 'Puppy', 'Kitten', 'Feral Slug', 'Feral Cat', 'Feral', 'Feral Hat', 'Goat', 'Hat', 'Rock', 'Ordinairy Rock', 'Pointy Stick', 'Big Snail', 'Lost Cyclist', 'Little Dwarf', 'Feral Dog', 'Brat', 'Red Hat', 'Mist', 'Falling Branch', 'Coyote', 'Flobglob', 'Lost Penguin', 'Snobtrobl', 'Dwarf', 'Feral ?', 'Feral Potato', 'Mad Brat', 'Broken Robot', 'Paperhat-Aeroplane', 'Black Dwarf', 'Feral Snake', 'Feral Tree', 'Saturday Music', 'Mountain Dog', 'Grass Monster', 'Small Wolf', 'Ginger Dwarf', 'Big Feral Cat', 'Goblin', 'Myst I', 'Blind Wolf', 'Armored Dwarf', 'Feral ??', 'Suare Hat', 'Hoblin', 'Moss Monster', 'Falling Tree', 'Pink Dwarft', 'Fat Dwarf', 'Big Feral Dog', 'Feral Owl', 'Froblin', 'Mean Teddybear', 'Magical Dwarf', 'Top Hat', 'Myst II', 'Rainy Cloud', 'Freddy', 'Master Dwarf', 'Feral ???', 'Troubled Dwarf', 'Angry Cucumber', 'King Dwarf', 'Feral Atomic Bomb', 'Rocky Snake', 'Robot', 'Wolf', 'Electric Dwarf', 'Flying Mittens', 'Mountain Goat', 'Rusty Moustache', 'Blood Wolf', 'Broblaglorb', 'Mad Trashcan', 'Evil Robot', 'Flying Zits', 'Evil Flower', 'Mechatronicon', 'Spaghetti Monster', 'Corrupted Hat'],
 	"Field": ["Fieldguy 1-1", "Fieldguy 1-2", "Fieldguy 1-3", "Fieldguy 2-1", "Fieldguy 2-2", "Fieldguy 2-3", "Fieldguy 3-1", "Fieldguy 3-2", "Fieldguy 3-3"],
 	"Road": ["Roadguy 1-1", "Roadguy 1-2", "Roadguy 1-3", "Roadguy 2-1", "Roadguy 2-2", "Roadguy 2-3", "Roadguy 3-1", "Roadguy 3-2", "Roadguy 3-3"]}
+
+#Lists with items and possible adjectives. Again, the items go from weak to strong.
 healingItems = ['Arsenic', 'Dirt', 'Water', 'Bread', 'Corn', 'Frog', 'Fluorine', 'Potato', 'Not So Hot Dog', 'Salad', 'Beans', 'Fish', 'Tooth Paste', 'Cucumber', 'Soda', 'Bunch Of Peas', 'Sandwich', 'Brew', 'Draught', 'Chicken Wing', 'Icecream', 'Hamburger', 'Apple', 'Tomato', 'Coffee', 'Cabbage', 'Cake', 'Honey', 'Portion Of French Fries', 'Mushroom', 'Canadian Bacon', 'Pancakes', 'Ketchup', 'Cookie', 'Maple Syrup', 'Soup', 'Waffle', 'Lizard', 'Medicine', 'Tea', 'Remedy', 'Potion', 'Cheese', 'Cupcake', 'Bacon', 'Chocolate', 'Strange Substance', 'Heroïn', 'Rice', 'Hugs In A Bottle', 'Unicorn Blood', 'Dessert Eagle', 'Chocolate Milk', 'Elixir']
 healingItemsAdj = ['Probably Poisonous', 'Awful', 'Diarrhea Inducing', 'Moldy', 'Sucky', 'Diseased', 'Gross', 'Rotten', 'Bad', 'Wasted', 'From The Garbage Can', 'Fast Food', 'Dirty', 'Unhealthy', 'Barely Acceptable', 'Best Before: Two Weeks Ago', 'Hate Filled', 'Mediocre', 'Lacking Vitamins', 'Gay', 'Ok', 'Cheap', 'Nice', 'Fried', 'FDA Approved', 'Tasty', 'Fresh', 'Gluten Free', 'Herbal', 'Average', 'Vegetarian', 'Good', 'Grilled', 'Shake Before Usage', 'Ice Cold', 'Normal', 'Exhilarating', 'Moisturized', 'Catch Up', 'Standard', 'Filling', 'Yummy Yummy In My Tummy', '0% Fats', 'Great', 'Open Here', 'Cooked', 'Roasted', 'Love Infused', 'Cheesy', 'Chocolate', 'Super', 'Baked', 'Vegan', 'Special', 'Glowing', 'Sundried', 'Heroic', 'Makes You Vomit Rainbows', 'Glorious', 'Marinated', 'Awesome', 'Healthy', 'Exquisite']
 weaponItems = ['Throwing Sand', 'Boots', 'Twig', 'Rock', 'Stone', 'Rubber Band', 'Butter Knife', 'Stick', 'Scissors', 'Fork', 'Bone', 'Shovel', 'Wrench', 'Magnets', 'Catapult', 'Lasso', 'Water Gun', 'Bear Hugs', 'Crowbar', 'Boxing Glove', 'Piece Of Glass', 'Bowling Ball', 'Chair', 'Club', 'Hammer', 'Blowgun', 'Boomerang', 'Bear Hands', 'Cheese Rasp', 'Razor', 'Knife', 'Baseball Bat', 'Saw', 'Tomahawk', 'Dagger', 'Axe', 'Machete', 'Bow And Arrow', 'Shuriken', 'Sai', 'Spear', 'Staff', 'Guitar', 'Cutlass', 'Crossbow', 'Nunchucks', 'Poison', 'Sword', 'Magic Wand', 'Rapier', 'Musket', 'Mace', 'Lance', 'Flail', 'Nail Gun', 'Blow Torch', 'Flintlock Rifle', 'Katana', 'Mines', 'Battleaxe', 'Revolver', 'Tazer', 'Cannon', 'Bombs', 'Bucket Of Lava', 'Piano String', 'Bubble Blaster', 'Bible', 'Thora', 'Koran', 'Pistol', 'Mysterious Syringe', 'Lawn Mower', 'Unholy Tome', 'Flame Thrower', 'Shotgun', 'Unidentified Weapon', 'Rifle', 'Sledge Hammer', 'Dynamite', 'Submachine Gun', 'Radioactive Barrel', 'Grand Piano', 'Chainsaw', 'Machine Gun', 'Sniper Rifle', 'Grenade', 'Spoon', 'Solar Flare', 'Excalibur', 'AK 47', 'Desert Eagle', 'Molotov Cocktail', 'Bazooka', 'Microwave', "Dragon's Tail", 'Javelin', 'Grenade Launcher', 'RPG', 'Unicorn Horn', 'X-57613C', 'Minigun', 'Gatling Gun', 'Tank']
@@ -24,23 +25,24 @@ weaponItemsAdj = ['Broken', 'Cardboard', 'Old', 'Toy', 'Dull', 'Weaponized', 'Pl
 armorItems = ['Underwear', 'Bra', 'Body Paint', 'Fierce Frown', 'Paper Shopping Bag Hat', 'Trousers', 'Arm Protectors', 'Leg Protectors', 'Bikini', "Fuck This Shit I'm Going Naked", 'Sweater', 'Back Protectors', 'Hat', 'Earcuffs', 'Chest Protectors', 'Water Wings', 'Cooking Pan Helmet', 'Head Protectors', 'Goggles', 'Fake Mustache', 'Arm Plating', 'Cape', 'Hockey Mask', 'Leg Plating', 'Gloves', 'Bucket Helmet', 'Back Plating', 'Kilt', 'Pumpkin Helmet', 'Chest Plating', 'Real Helmet', 'Boots', 'Head Plating', 'Suit', 'Arm Armor', 'Garbage Can Lid Shield', 'Leg Armor', 'Crown', 'Back Armor', 'Shield', 'Chest Armor', 'Vest', 'Head Armor', 'Power Suit', 'Arm Power Armor', 'Turtle Shell', 'Leg Power Armor', 'Reactive Armor', 'Back Power Armor', 'Power Shield', 'Sarcasm', 'Top Hat', 'Chest Power Armor', 'Magical Barrier', 'Head Power Armor', 'Tank']
 armorItemsAdj = ['Old', 'Broken', 'Gross', 'Skin', 'Pre Historic', 'Ripped', 'Unwashed', 'Aluminum Foil', 'Black', 'Wooden', 'Trashy', 'Implausible', 'Made In China', 'Brittle', 'Hole Filled', 'Shabby', 'Cardboard', 'Inferior', 'Weak', 'Hide', 'Paper', 'Slippery', 'Falling Apart', 'Leather', 'Slutty', 'Homemade', 'Light', 'Not So Bad', 'Duct Tape', "Gentleman's", 'Good', 'Copper', 'Sneaking', 'Protective', 'Roman', 'Cool', 'Bronze', 'Feathered', 'Makes You Look Skinny', 'Fireproof', 'Tough', 'Shiny', 'Huge', 'Analog', 'Iron', 'Made In Germany', 'Special', 'Sparkling', 'Stunning', 'Super', 'White', 'Winged', 'Steel', 'Heavy', 'Bulletproof', 'Holy', 'Invisible', 'Spock', 'Beautiful', 'Twinkling', 'Emerald Inlaid', 'Legendary', 'Sacred', 'Ironic', 'Dragon Scales', 'Bad As Badass', 'Fabulously Amazebaltastic', 'Futuristic', 'Unicorn Hide', 'Asian', "Master's", 'Perfect']
 
-locations = {} #Multidimensional dictionary with coordinates and their objects {x : {y : object}}
-creatures = {} #All creature id's and their objects {id : object}
+locations = {} #Multidimensional dictionary with coordinates and their location objects {x : {y : object}}
+creatures = {} #All creature id's and their objects {id : object}. Contains players as well.
 bank = {} #Bank-stored gold for each player {id : amount}
-ids = [True] #Remembers currently taken id's, False means taken.
+ids = [True] #Remembers currently taken ids for items and NPCs, False means taken. Doesn't contain players.
 messageCount = 0 #Keeps track of number of send messages, saves after every 20.
 items = {} #Items dictionary {id : object}
 
 #classes
 class location:
 	def __init__(self, x, y, locationType, level):
-		self.x = x
+		self.x = x #Locations dict coordinates
 		self.y = y
-		self.locationType = locationType
+		self.locationType = locationType #Terrain type: Mountain, Field, etc.
 		self.level = level
-		self.population = []
-		self.players = []
+		self.population = [] #Contains NPC ids
+		self.players = [] # " player
 	
+	#Add or remove a NPC or player from the lists:
 	def populationAdd(self, id):
 		if not id in self.population:
 			self.population += [id]
@@ -57,11 +59,12 @@ class location:
 		if id in self.players:
 			self.players.pop(self.players.index(id))
 		
+	#Display its own stats:
 	def info(self):
 		message = "Terrain: " + self.locationType + \
-			"\nCoordinates: " + coordsFormat(self.x, self.y) + \
-			"\nDifficulty: " + getRating(self.level)
-		if bool(self.population):
+			"\nCoordinates: " + coordsFormat(self.x, self.y) + \ #A fancier format of the coordinates
+			"\nDifficulty: " + getRating(self.level) #easy, hard etc. instead of level number
+		if bool(self.population): #players and npc in the location:
 			message += "\nCreatures: "
 			for i in self.population:
 				message += "\n" + creatures[i].name + " (" + str(creatures[i].id) + ")"
@@ -77,30 +80,27 @@ class creature:
 		self.id = id
 		self.level = level
 		locations[x][y].populationAdd(self.id)
-		rating = randint(0, round(level / 100 * len(locationTypes[locations[x][y].locationType])))
-		self.creatureType = creatureType
+		self.creatureType = creatureType # The creature name, for players it's "Player" to distinct players and NPCs.
 		self.name = self.creatureType
-		first = self.name[0].lower()
+		first = self.name[0].lower() # Should it be reffered to with "a" or "an"?
 		if first == "a" or first == "e" or first == "i" or first == "o" or first == "u":
 			self.n = "n"
 		else:
 			self.n = ""
 		self.maxHp = getLevelHp(level)
 		self.hp = self.maxHp
-		self.damage = getItemEffect("Weapon", level)
+		self.damage = getItemEffect("Weapon", level) #NPCs get weapon and armor ratings as if they had weapons of their own level
 		self.armor = getItemEffect("Armor", level)
 			
 
-	def teleport(self, x, y):
+	def teleport(self, x, y): #Move to location x, y. 
 		try:
-			locations[self.x][self.y].populationRemove(self.id)
-		except Exception: #Excess
-			pass
+			locations[self.x][self.y].populationRemove(self.id) #It could happen that a creature is not actually in a location
 		locations[x][y].populationAdd(self.id)
 		self.x = x
 		self.y = y
 		
-	def die(self):
+	def die(self): #Respawn without gold and xp if it is a player, delete if it is a NPC.
 		if self.creatureType == "Player":
 			if not self.rememberXp:
 				self.xp = 0
@@ -114,21 +114,21 @@ class creature:
 			locations[self.x][self.y].populationRemove(self.id)
 			del creatures[self.id]
 			
-	def attack(self, targetId):
-		fightBack = False
+	def attack(self, targetId): #Checks if attack is possible, subtracts a certain damage, handles death and rewards
+		fightBack = False #If a NPC is attacked and does not die, it will attack back once.
 		if self.x == 0 and self.y == 0:
 			return ["You can't fight when in Cromania. ", fightBack]
-		if targetId in locations[self.x][self.y].players:
+		if targetId in locations[self.x][self.y].players: #If the target is a player and in the right location:
 			target = creatures[targetId]
 			if self == target:
 				self.die()
 				return ["You commited suïcide and lost all your gold. ", fightBack]
-			if self.damage > target.armor:
+			if self.damage > target.armor: #Ignore if the damage isn't greater than the target's armor
 				min = round((self.damage - target.armor)/2)
 				if min == 0:
-					min = 1
+					min = 1 #At least one damage point
 				max = self.damage - target.armor
-				damage = randint(min, max) #What if max == 0?
+				damage = randint(min, max)
 				target.hp -= damage
 				message = self.name + " dealt " + str(damage) + " damage to " + target.name + ". "
 				if target.hp <= 0:
@@ -344,6 +344,8 @@ class player(creature, inventory):
 				upper = round(level / 100 * len(locationTypes[curLoc.locationType])) + 3 #What if upper too high?
 				if lower < 0:
 					lower = 0
+				if upper >= len(locationTypes[curLoc.locationType]):
+					upper = len(locationTypes[curLoc.locationType]) #Upper can be the actual length because the slice in the next line excludes it
 				creatures[enemyId] = creature(self.x, self.y, enemyId, choice(locationTypes[curLoc.locationType][lower : upper]), level)
 				return "You encountered a" + creatures[enemyId].n + " " + creatures[enemyId].name + " with id " + str(enemyId) + ". "
 		else:
