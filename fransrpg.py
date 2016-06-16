@@ -705,7 +705,7 @@ def newLocation(x, y, locationType, level): #Create a new location instance and 
 	return "New " + getRating(level) + " location discovered: " + locationType + ". "
 
 def newItemName(type, level): #Generates an item name. Number of adjectives based on the level, and adjectives and names are chosen the higher the level, the higher in the lists.
-	if type == "Healing Item":
+	if type == "Healing Item": #Choose list:
 		itemsNouns = healingItems
 		itemsAdj = healingItemsAdj
 	elif type == "Weapon":
@@ -720,36 +720,36 @@ def newItemName(type, level): #Generates an item name. Number of adjectives base
 	if itemLower < 0:
 		itemLower = 0
 	if itemUpper > len(itemsNouns):
-		itemLower = len(itemsNouns) - 10 #Extra items when near max level
-			#itemUpper = len(itemsNouns)?? 
+		itemLower = len(itemsNouns) - 10 #Choice from extra items when near max level
+			#itemsUpper can be left unchanged because the slice at the end of function will ignore it if it is to high
 
 	adjLower = round(level / 100 * len(itemsAdj)) - 5
 	adjUpper = round(level / 100 * len(itemsAdj)) + 5
 	if adjLower < 0:
 		adjLower = 0
 	if adjUpper > len(itemsAdj):
-		adjLower = len(itemsAdj) - 15 #Extra Adj near when max level
+		adjLower = len(itemsAdj) - 15
 		#same as at itemsUpper
 	adj = ""
-	for i in range(randint(1, 2) + round(level / 33)): #Min 1, max 5 Adj
-		while adj in name:
+	for i in range(randint(1, 2) + round(level / 33)): #At least 1 and at most 5 adjectives
+		while adj in name: #Pick a new adjective when it was already chosen
 			adj = choice(itemsAdj[adjLower : adjUpper])
 		name += adj + " "
 	name += choice(itemsNouns[itemLower : itemUpper])
 	return name
 	
-def getReward(player, rating):
+def getReward(player, rating): #Get some gold based on the rating. Gives a fair amount when the rating equals the level of a killed NPC.
 	max = round(0.05 * rating ** 2 + 0.5 * rating)
 	amount = randint(round(max / 2), max)
 	if amount == 0:
-		amount = 1
+		amount = 1 #Always at least 1 gold.
 	player.gold += amount
 	return "Your loot is " + str(amount) + " gold. "
 	
-def getName(update):
+def getName(update): #update contains information about who used a command. This extracts the user's name from it.
 	return str(update.message.from_user.first_name)
 	
-def coordsFormat(x, y):
+def coordsFormat(x, y): #Returns a fancier representation of coordinates.
 	if y >= 0:
 		yText = str(y) + "N, "
 	else:
@@ -760,13 +760,13 @@ def coordsFormat(x, y):
 		xText = str(x) + "E"
 	return yText + xText
 	
-def getLevelXp(level):
+def getLevelXp(level): #Calculates xp needed for players to level up, per level.
 	return (round(level ** 1.1)+9)
 	
-def getLevelHp(level):
+def getLevelHp(level): #Calculates the max hp of creatues, per level.
 	return int(0.5 * level ** 2 + 0.5 * level + 9)
 	
-def getItemEffect(item, level):
+def getItemEffect(item, level): #Gives amount of hp healed, damage or armor based on an item's level.
 	if item == "Healing Item":
 		return randint(round(0.9 * getLevelHp(level) / (0.1 * level + 2)), round(1.1 * getLevelHp(level) / (0.1 * level + 2)))
 	elif item == "Weapon":
@@ -774,7 +774,7 @@ def getItemEffect(item, level):
 	elif item == "Armor":
 		return randint(round(getLevelHp(level) / 60 * 1.1), round(getLevelHp(level) / 30 * 1.1))
 		
-def getRating(level):
+def getRating(level): #Convert location levels to this range.
 	if level <= 10:
 		return "very easy"
 	elif level <= 20:
@@ -796,7 +796,7 @@ def getRating(level):
 	else:
 		return "insane"
 
-def getId():
+def getId(): #Returns first unoccupied id and marks it as occupied.
 	global ids
 	for i in range(len(ids)):
 		if ids[i]:
@@ -805,7 +805,7 @@ def getId():
 	ids += [False]
 	return len(ids) - 1
 	
-def sendMessage(bot, update, message):
+def sendMessage(bot, update, message): #Sends a message to Telegram, keeps track of autosave, adresses user.
 	global messageCount
 	bot.sendMessage(update.message.chat_id, text = ("@" + getName(update) + "\n" + message))
 	messageCount += 1
@@ -813,17 +813,15 @@ def sendMessage(bot, update, message):
 		save(bot, update)
 		messageCount = 0
 
-#probs make global in main or inv above
-storeObject = inventory(getId())
+storeObject = inventory(getId()) #The store, with items for purchase.
 
 #main
 def main():
-	updater = Updater(sys.argv[1])
+	updater = Updater(sys.argv[1]) #Something important for the Telegram interface. argv[1] should be the bot token
 	
-	dispatcher = updater.dispatcher
+	dispatcher = updater.dispatcher #The same
 	
-	#load(None, None) #Don't send message
-	
+	#Commands accessable by players, some are double for the spelling-impaired:
 	dispatcher.addTelegramCommandHandler("start", start)
 	dispatcher.addTelegramCommandHandler("location", locationInfo)
 	dispatcher.addTelegramCommandHandler("stats", stats)
@@ -847,11 +845,11 @@ def main():
 	dispatcher.addTelegramCommandHandler("viewStore", viewStore)
 	dispatcher.addTelegramCommandHandler("viewstore", viewStore)
 	
-	newLocation(0, 0, "Cromania", 1)
-	getId #???
-	creatures[storeObject.id] = storeObject #??? Does this work?
+	newLocation(0, 0, "Cromania", 1) #Create home city with level 1
+
+	creatures[storeObject.id] = storeObject #Make storeObject possible to be found in the creatures list
 	
-	updater.start_polling()
+	updater.start_polling() #Start waiting for commands
 
 if __name__ == '__main__':
-	main()
+	main() #Start main() on start

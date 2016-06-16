@@ -13,3 +13,5 @@ Things that really should be changed:
 - locationInfo should work for individual locations (referable to by coordinates)
 - listPlayers should give player levels as well
 - fillStore() reaally shoudl be changed (how to access it, amount of items per player, more healing items)
+- Find a home for the creation of the storeObject
+- storeObject in creatures[]? What if something loops trough it and cannot find certain variables? (eg listPlayers()) 
