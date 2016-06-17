@@ -293,6 +293,7 @@ class player(creature, inventory):
 				self.xp -= getLevelXp(self.level)
 				self.level += 1
 				self.maxHp = getLevelHp(self.level) #The only thing that directly changes when leveling up is maxHp. 
+				self.hp = self.maxHp
 				message += "You leveled up! You are now level " + str(self.level) + ". "
 			if self.level >= 100:
 				self.xp = 0
@@ -399,8 +400,9 @@ class healingItem(item): #Use to regenerate health.
 	def use(self, userId): #Actually use the item
 		if userId == inventoryId:
 			creatures[userId].heal(self.effect)
+			message = "You used " + self.name + " healing " + str(self.effect) + ". "
 			self.destroy() #Single use
-			return "You used " + self.name + " healing " + str(self.effect) + ". "
+			return message
 		else:
 			return self.name + " is not in your inventory!"
 
@@ -463,12 +465,22 @@ def stats(bot, update, args): #Get info about a player or creature
 			sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
 	
 def locationInfo(bot, update, args): #Gives info about the location a creature (players are creatures as well) is in.
-	if args:
+	if len(args) == 1:
 		id = args[0]
 		if id in creatures:
 			sendMessage(bot, update, locations[creatures[id].x][creatures[id].y].info()) #Find location and use build-in info() method
 		else:
 			sendMessage(bot, update, "There is no creature with that id...")
+	elif len(args) == 2:
+		try:
+			x = int(args[0])
+			y = int(args[1])
+			message = locations[x][y].info()
+			sendMessage(bot, update, message)
+		except KeyError:
+			sendMessage(bot, update, "That location is not yet discovered.")
+		except ValueError:
+			sendMessage(bot, update, "You passed an invalid value!")
 		
 	else:
 		id = getName(update) #No argument gives info about the location of the player itself
@@ -479,9 +491,9 @@ def locationInfo(bot, update, args): #Gives info about the location a creature (
 	
 def listPlayers(bot, update): #View all players and their coordinates.
 	message = ""
-	for i in list(creatures.values()):
-		if i.creatureType == "Player":
-			message += i.name + ": " + coordsFormat(i.x, i.y) + "\n" 
+	for creature in list(creatures.values()):
+		if creature.creatureType == "Player":
+			message += "{} level {}: {}\n".format(creature.name, creature.level, coordsFormat(creature.x, creature.y)) 
 	sendMessage(bot, update, message)
 	
 
@@ -700,7 +712,7 @@ def viewStore(bot, update): #Print all items currently in the store
 	if storeObject.inventory:
 		for i in storeObject.inventory:
 			if items[i].itemType == "Armor" or items[i].itemType == "Weapon": #Print level as well when it is armor or a weapon
-				level = " Level %s" % (items[i].level)
+				level = " level %s" % (items[i].level)
 			else:
 				level = ""
 			message += "%s%s: %s (%s), effect %s, %s gold\n" % (items[i].itemType, level, items[i].name, items[i].id, items[i].effect, items[i].value)
@@ -827,11 +839,12 @@ def sendMessage(bot, update, message): #Sends a message to Telegram, keeps track
 		save(bot, update)
 		messageCount = 0
 
-storeObject = inventory(getId()) #The store, with items for purchase.
 
 #main
 
 def main():
+	global storeObject
+	storeObject = inventory(getId()) #The store, with items for purchase.
 	updater = Updater(token = sys.argv[1]) #Something important for the Telegram interface. argv[1] should be the bot token
 	
 	dispatcher = updater.dispatcher #The same
