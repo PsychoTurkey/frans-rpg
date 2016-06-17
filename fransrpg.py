@@ -869,8 +869,6 @@ def main():
 	dispatcher.add_handler(reset_handler)
 	
 	newLocation(0, 0, "Cromania", 1) #Create home city with level 1
-
-	creatures[storeObject.id] = storeObject #Make storeObject possible to be found in the creatures list
 	
 	updater.start_polling() #Start waiting for commands
 
