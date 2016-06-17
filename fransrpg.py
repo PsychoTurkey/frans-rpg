@@ -355,7 +355,7 @@ class player(creature, inventory):
 				creatures[enemyId] = creature(self.x, self.y, enemyId, choice(locationTypes[curLoc.locationType][lower : upper]), level)
 				return "You encountered a" + creatures[enemyId].n + " " + creatures[enemyId].name + " with id " + str(enemyId) + ". "
 		else:
-			return "You were attacked! " + choice(self.location.population).attack(self.id)[0]
+			return "You were attacked! " + choice(self.locations[self.x][self.y].population).attack(self.id)[0]
 						
 	def equip(self, itemId): #Equip an item and adjust stats.
 		if items[itemId].level <= self.level:
