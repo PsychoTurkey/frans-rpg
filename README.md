@@ -1,5 +1,4 @@
 # frans-rpg
-Command line like rpg for Telegram.
 
 Things that really should be changed:
 - Make player ids telegram ids instead of their names (and change everything to print both ids and names) (especially for /do command)
