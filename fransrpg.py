@@ -27,11 +27,12 @@ weaponItemsAdj = ['Broken', 'Cardboard', 'Old', 'Toy', 'Dull', 'Weaponized', 'Pl
 armorItems = ['Underwear', 'Bra', 'Body Paint', 'Fierce Frown', 'Paper Shopping Bag Hat', 'Trousers', 'Arm Protectors', 'Leg Protectors', 'Bikini', "Fuck This Shit I'm Going Naked", 'Sweater', 'Back Protectors', 'Hat', 'Earcuffs', 'Chest Protectors', 'Water Wings', 'Cooking Pan Helmet', 'Head Protectors', 'Goggles', 'Fake Mustache', 'Arm Plating', 'Cape', 'Hockey Mask', 'Leg Plating', 'Gloves', 'Bucket Helmet', 'Back Plating', 'Kilt', 'Pumpkin Helmet', 'Chest Plating', 'Real Helmet', 'Boots', 'Head Plating', 'Suit', 'Arm Armor', 'Garbage Can Lid Shield', 'Leg Armor', 'Crown', 'Back Armor', 'Shield', 'Chest Armor', 'Vest', 'Head Armor', 'Power Suit', 'Arm Power Armor', 'Turtle Shell', 'Leg Power Armor', 'Reactive Armor', 'Back Power Armor', 'Power Shield', 'Sarcasm', 'Top Hat', 'Chest Power Armor', 'Magical Barrier', 'Head Power Armor', 'Tank']
 armorItemsAdj = ['Old', 'Broken', 'Gross', 'Skin', 'Pre Historic', 'Ripped', 'Unwashed', 'Aluminum Foil', 'Black', 'Wooden', 'Trashy', 'Implausible', 'Made In China', 'Brittle', 'Hole Filled', 'Shabby', 'Cardboard', 'Inferior', 'Weak', 'Hide', 'Paper', 'Slippery', 'Falling Apart', 'Leather', 'Slutty', 'Homemade', 'Light', 'Not So Bad', 'Duct Tape', "Gentleman's", 'Good', 'Copper', 'Sneaking', 'Protective', 'Roman', 'Cool', 'Bronze', 'Feathered', 'Makes You Look Skinny', 'Fireproof', 'Tough', 'Shiny', 'Huge', 'Analog', 'Iron', 'Made In Germany', 'Special', 'Sparkling', 'Stunning', 'Super', 'White', 'Winged', 'Steel', 'Heavy', 'Bulletproof', 'Holy', 'Invisible', 'Spock', 'Beautiful', 'Twinkling', 'Emerald Inlaid', 'Legendary', 'Sacred', 'Ironic', 'Dragon Scales', 'Bad As Badass', 'Fabulously Amazebaltastic', 'Futuristic', 'Unicorn Hide', 'Asian', "Master's", 'Perfect']
 
-noWeaponDamage = 4 #Players can't do anything if they can't fight. Useful when testing.
-initialLevel = 20 #Change for testing purposes: new characters start at this level.
+noWeaponDamage = 2 #Players can't do anything if they can't fight. Useful when testing.
+initialLevel = 1 #Change for testing purposes: new characters start at this level.
 
 locations = {} #Multidimensional dictionary with coordinates and their location objects {x : {y : object}}
 creatures = {} #All creature id's and their objects {id : object}. Contains players as well.
+inventories = {} #Contains players, store and market, needed for when an item needs to find it's inventory.
 bank = {} #Bank-stored gold for each player {id : amount}
 ids = [True] #Remembers currently taken ids for items and NPCs, False means taken. Doesn't contain players. 
 messageCount = 0 #Keeps track of number of send messages, saves after every 20.
@@ -206,7 +207,7 @@ class inventory: #A class that can manage items. Used for shop and players.
 
 	def dropItem(self, itemId):
 		if itemId in self.inventory:
-			self.inventory.pop(self.inventory.index(id))
+			self.inventory.pop(self.inventory.index(itemId))
 		
 class player(creature, inventory):
 	def __init__(self, id): #Todo: sepparate ids and names
@@ -388,7 +389,7 @@ class item: #Parent class for healing items, gear.
 	
 	def destroy(self): #Delete the item, remove it from an inventory
 		ids[self.id] = True
-		creatures[self.inventoryId].dropItem(self.id)
+		inventories[self.inventoryId].dropItem(self.id)
 		del items[self.id]
 	
 	#def market(self, price): #Move to market with a player-chosen price: other players can buy it, but the seller can't use it anymore.s
@@ -490,6 +491,7 @@ def join(bot, update): #Create a character to join the game!
 	id = getName(update) #Extracts user name from the update class.
 	if not id in creatures:
 		creatures[id] = player(id)
+		inventories[id] = creatures[id]
 		sendMessage(bot, update, "You joined the game! Your name is " + id + ".")
 	else:
 		sendMessage(bot, update, "You already have a character...")
@@ -600,6 +602,7 @@ def save(bot, update): #Save all creatures, items, locations etc. to file. Reset
 	with open("fransrpg.pkl", "wb") as output:
 		global messageCount
 		pickle.dump(creatures, output, pickle.HIGHEST_PROTOCOL)
+		pickle.dump(inventories, output, pickle.HIGHEST_PROTOCOL)
 		pickle.dump(items, output, pickle.HIGHEST_PROTOCOL)
 		pickle.dump(locations, output, pickle.HIGHEST_PROTOCOL)
 		pickle.dump(ids, output, pickle.HIGHEST_PROTOCOL)
@@ -611,6 +614,7 @@ def save(bot, update): #Save all creatures, items, locations etc. to file. Reset
 def load(bot, update): #Load all creatures, items, locations etc. from file. Reset autosave. 
 	with open("fransrpg.pkl", "rb") as input:
 		global creatures
+		global inventories
 		global items
 		global locations
 		global ids
@@ -618,6 +622,7 @@ def load(bot, update): #Load all creatures, items, locations etc. from file. Res
 		global storeObject
 		global messageCount
 		creatures = pickle.load(input)
+		inventories = pickle.load(input)
 		items = pickle.load(input)
 		locations = pickle.load(input)
 		ids = pickle.load(input)
@@ -871,6 +876,8 @@ def main():
 	
 	newLocation(0, 0, "Cromania", 1) #Create home city with level 1
 	
+	inventories[storeObject.id] = storeObject
+
 	updater.start_polling() #Start waiting for commands
 
 if __name__ == '__main__':
