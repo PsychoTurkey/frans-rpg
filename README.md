@@ -20,3 +20,4 @@ Things that really should be changed:
 - Send a message from fillStore()
 - Loan function: get an amount of money (to your inventory gold), but all money you store in bank will be taken untill the loan has been repaid. ()
 - viewStore() names everything a weapon and gives level while it shouldn't for healing items/
+- I don't recall ever seeing one of the last words of items adjectives and names. The algorithm should be checked and tested.
