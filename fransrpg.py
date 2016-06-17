@@ -122,13 +122,14 @@ class creature:
 			del creatures[self.id]
 			
 	def attack(self, targetId): #Checks if attack is possible, subtracts a certain damage, handles death and rewards.
+		fightBack = False
 		if self.x == 0 and self.y == 0:
-			return ["You can't fight when in Cromania. ", False] #The return value is checked for the message and whether the victim fights back (only if the victim is a NPC and doesn't die).
+			return ["You can't fight when in Cromania. ", fightBack] #The return value is checked for the message and whether the victim fights back (only if the victim is a NPC and doesn't die).
 		if targetId in locations[self.x][self.y].players: #If the target is a player and in the right location...
 			target = creatures[targetId]
 			if self == target:
 				self.die()
-				return ["You commited suïcide and lost all your gold. ", False]
+				return ["You commited suïcide and lost all your gold. ", fightBack]
 			if self.damage > target.armor: #Ignore if the damage isn't greater than the target's armor.
 				min = round((self.damage - target.armor)/2)
 				if min == 0:
@@ -149,7 +150,7 @@ class creature:
 				else:
 					message += target.name + " still has " + str(target.hp) + " health. "
 			else:
-				return [target.name + " absorbed all damage... ", False]
+				return [target.name + " absorbed all damage... ", fightBack]
 		
 		elif targetId in locations[self.x][self.y].population: #...or a NPC in the right location:
 			fightBack = True #If a NPC is attacked and does not die, it will attack back.
