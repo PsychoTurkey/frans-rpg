@@ -28,6 +28,7 @@ armorItems = ['Underwear', 'Bra', 'Body Paint', 'Fierce Frown', 'Paper Shopping 
 armorItemsAdj = ['Old', 'Broken', 'Gross', 'Skin', 'Pre Historic', 'Ripped', 'Unwashed', 'Aluminum Foil', 'Black', 'Wooden', 'Trashy', 'Implausible', 'Made In China', 'Brittle', 'Hole Filled', 'Shabby', 'Cardboard', 'Inferior', 'Weak', 'Hide', 'Paper', 'Slippery', 'Falling Apart', 'Leather', 'Slutty', 'Homemade', 'Light', 'Not So Bad', 'Duct Tape', "Gentleman's", 'Good', 'Copper', 'Sneaking', 'Protective', 'Roman', 'Cool', 'Bronze', 'Feathered', 'Makes You Look Skinny', 'Fireproof', 'Tough', 'Shiny', 'Huge', 'Analog', 'Iron', 'Made In Germany', 'Special', 'Sparkling', 'Stunning', 'Super', 'White', 'Winged', 'Steel', 'Heavy', 'Bulletproof', 'Holy', 'Invisible', 'Spock', 'Beautiful', 'Twinkling', 'Emerald Inlaid', 'Legendary', 'Sacred', 'Ironic', 'Dragon Scales', 'Bad As Badass', 'Fabulously Amazebaltastic', 'Futuristic', 'Unicorn Hide', 'Asian', "Master's", 'Perfect']
 
 noWeaponDamage = 4 #Players can't do anything if they can't fight. Useful when testing.
+initialLevel = 20 #Change for testing purposes: new characters start at this level.
 
 locations = {} #Multidimensional dictionary with coordinates and their location objects {x : {y : object}}
 creatures = {} #All creature id's and their objects {id : object}. Contains players as well.
@@ -201,7 +202,7 @@ class inventory: #A class that can manage items. Used for shop and players.
 			
 	def gainItem(self, itemId): #Add or remove an item from this inventory:
 		if not itemId in self.inventory:
-			self.inventory += itemId
+			self.inventory += [itemId]
 
 	def dropItem(self, itemId):
 		if itemId in self.inventory:
@@ -215,10 +216,10 @@ class player(creature, inventory):
 		self.id = id #How to refer to this player
 		self.creatureType = "Player" #Distinct from creatures
 		self.name = id #Used for messages
-		self.level = 1 #Start at level 1, max 100
+		self.level = initialLevel #Start at level 1, max 100
 		self.xp = 0 #Level up when a player reaches a certain xp amount, amount increases per level.
-		self.maxHp = 10
-		self.hp = 10 #Initial hp
+		self.maxHp = getLevelHp(self.level)
+		self.hp = self.maxHp
 		self.damage = noWeaponDamage #Initial stats
 		self.armor = 0
 		self.gold = 0 #Gold that the player currently has on them. One loses it on death.
@@ -293,7 +294,7 @@ class player(creature, inventory):
 			while self.xp >= getLevelXp(self.level): #getLevelXp() gives the amount xp needed to level up. Keep leveling up when total xp is greater than this value.
 				self.xp -= getLevelXp(self.level)
 				self.level += 1
-				self.maxHp = getLevelHp() #The only thing that directly changes when leveling up is maxHp. 
+				self.maxHp = getLevelHp(self.level) #The only thing that directly changes when leveling up is maxHp. 
 				message += "You leveled up! You are now level " + str(self.level) + ". "
 			if self.level >= 100:
 				self.xp = 0
@@ -355,7 +356,7 @@ class player(creature, inventory):
 				creatures[enemyId] = creature(self.x, self.y, enemyId, choice(locationTypes[curLoc.locationType][lower : upper]), level)
 				return "You encountered a" + creatures[enemyId].n + " " + creatures[enemyId].name + " with id " + str(enemyId) + ". "
 		else:
-			return "You were attacked! " + choice(self.locations[self.x][self.y].population).attack(self.id)[0]
+			return "You were attacked! " + creatures[choice(locations[self.x][self.y].population)].attack(self.id)[0]
 						
 	def equip(self, itemId): #Equip an item and adjust stats.
 		if items[itemId].level <= self.level:
@@ -658,7 +659,6 @@ def reset(bot, update): #Delete everything and start from the beginning. Only al
 		storeObject = inventory(getId()) #Create store.
 		messageCount = 0
 		newLocation(0, 0, "Cromania", 1) #Create initial location.
-		creatures[storeObject.id] = storeObject
 		sendMessage(bot, update, "Reset all game data! Type '/save' to make permanent or '/load' to undo.")
 	else:
 		sendMessage(bot, update, "You have to be Storm for that.")
@@ -667,7 +667,7 @@ def fillStore(bot, update): #Create 5 items per player, with about their level.
 	for i in storeObject.inventory: #Clear old store inventory
 		items[i].destroy()
 	for i in creatures:
-		if creatures[i].type == "Player":
+		if creatures[i].creatureType == "Player":
 			for j in range(5):
 				level = creatures[i].level + randint(-3, 1) #Random level with middle slightly below player level
 				if level <= 0: #But between 1 and 100
@@ -697,7 +697,7 @@ def viewStore(bot, update): #Print all items currently in the store
 		for i in storeObject.inventory:
 			if items[i].itemType == "Armor" or items[i].itemType == "Weapon": #Print level as well when it is armor or a weapon
 				message += "Level %s " % (items[i].level)
-			message += "%s: %s (%s), %s\n" % (items[i].itemType, items[i].name, items[i].id, items[i].effect)
+			message += "%s: %s (%s), rating %s\n" % (items[i].itemType, items[i].name, items[i].id, items[i].effect)
 		sendMessage(bot, update, message)
 	else:
 		sendMessage(bot, update, "The store is currently empty.")
@@ -817,7 +817,7 @@ def sendMessage(bot, update, message): #Sends a message to Telegram, keeps track
 	global messageCount
 	bot.sendMessage(chat_id = update.message.chat_id, text = ("@" + getName(update) + "\n" + message))
 	messageCount += 1
-	if messageCount >= 10:
+	if messageCount >= 20:
 		save(bot, update)
 		messageCount = 0
 
