@@ -429,6 +429,7 @@ def start(bot, update): #Initial message
 
 def help(bot, update): #Lists player commands
 	sendMessage(bot, update, "Type '/help' for this message.\
+	\nType '/start' to see the welcome message.\
 	\nType '/stats [id]' to see that creature's stats. Player id's are their names. Enter no id for your own stats.\
 	\nType '/location [id]' to get info about that creature's current location.\
 	\nType '/players' to see all players and their locations.\
@@ -439,7 +440,7 @@ def help(bot, update): #Lists player commands
 	\nType '/deposit [amount]' or '/withdraw [amount]' to move your gold when in Cromania.\
 	\nType '/give [amount] [playername]' to bring that amount of gold to someone's bank.\
 	\nType '/fill' to reset the store's items.\
-	\nType '/store' to see the content of the store.\
+	\nType '/shop' to see the content of the store.\
 	\nType '/save' to save the game to file. Autosave will occur after every 20 send messages.\
 	\nType '/load' to load the game from file.")
 
@@ -682,7 +683,7 @@ def fillStore(bot, update): #Create 5 items per player, with about their level.
 				effect = getItemEffect(item, level + 2) #Formula for effect per item per level
 				if item == "Healing Item":
 					value = round(0.02 * effect ** 2 + 0.5 * effect - 2) #Value based on effect
-					items[id] = weapon(id, name, level, value, effect, storeObject.id, storeObject.id)
+					items[id] = healingItem(id, name, value, effect, storeObject.id, storeObject.id)
 					storeObject.gainItem(id)
 				elif item == "Weapon":
 					value = round(0.15 * effect ** 2 + 3 * effect)
@@ -690,16 +691,19 @@ def fillStore(bot, update): #Create 5 items per player, with about their level.
 					storeObject.gainItem(id)
 				elif item == "Armor":
 					value = round(0.15 * (2.5 * effect) ** 2 + 3 * (2.5 * effect))
-					items[id] = weapon(id, name, level, value, effect, storeObject.id, storeObject.id)
+					items[id] = armor(id, name, level, value, effect, storeObject.id, storeObject.id)
 					storeObject.gainItem(id)
+	viewStore(bot, update)
 
 def viewStore(bot, update): #Print all items currently in the store
+	message = "Items:\n"
 	if storeObject.inventory:
-		message = ""
 		for i in storeObject.inventory:
 			if items[i].itemType == "Armor" or items[i].itemType == "Weapon": #Print level as well when it is armor or a weapon
-				message += "Level %s " % (items[i].level)
-			message += "%s: %s (%s), rating %s\n" % (items[i].itemType, items[i].name, items[i].id, items[i].effect)
+				level = " Level %s" % (items[i].level)
+			else:
+				level = ""
+			message += "%s%s: %s (%s), effect %s, %s gold\n" % (items[i].itemType, level, items[i].name, items[i].id, items[i].effect, items[i].value)
 		sendMessage(bot, update, message)
 	else:
 		sendMessage(bot, update, "The store is currently empty.")
@@ -826,6 +830,7 @@ def sendMessage(bot, update, message): #Sends a message to Telegram, keeps track
 storeObject = inventory(getId()) #The store, with items for purchase.
 
 #main
+
 def main():
 	updater = Updater(token = sys.argv[1]) #Something important for the Telegram interface. argv[1] should be the bot token
 	
@@ -858,7 +863,7 @@ def main():
 	dispatcher.add_handler(give_handler)
 	fill_handler = CommandHandler("fill", fillStore)
 	dispatcher.add_handler(fill_handler)
-	store_handler = CommandHandler("store", viewStore)
+	store_handler = CommandHandler("shop", viewStore)
 	dispatcher.add_handler(store_handler)
 	do_handler = CommandHandler("do", do, pass_args=True)
 	dispatcher.add_handler(do_handler)
