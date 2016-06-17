@@ -83,8 +83,8 @@ class creature:
 	def __init__(self, x, y, id, creatureType, level):	
 		self.x = x #Initial location
 		self.y = y
-		locations[x][y].populationAdd(self.id)
 		self.id = id #Refer to the creature (ingame as well) with this number
+		locations[x][y].populationAdd(self.id)
 		self.level = level #Initial level
 		self.creatureType = creatureType #The creature name, for players it's "Player" to distinct players and NPCs.
 		self.name = self.creatureType
