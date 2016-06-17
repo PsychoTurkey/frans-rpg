@@ -1,5 +1,7 @@
 #Imports
-from telegram import Updater
+import sys
+from telegram.ext import Updater
+from telegram.ext import CommandHandler
 from random import random
 from random import choice
 from random import randint
@@ -65,9 +67,9 @@ class location:
 		
 	#Display its own stats:
 	def info(self):
-		message = "Terrain: " + self.locationType + \
-			"\nCoordinates: " + coordsFormat(self.x, self.y) + \ #A fancier format of the coordinates
-			"\nDifficulty: " + getRating(self.level) #easy, hard etc. instead of level number
+		message = ("Terrain: " + self.locationType + 
+			"\nCoordinates: " + coordsFormat(self.x, self.y) +  #A fancier format of the coordinates
+			"\nDifficulty: " + getRating(self.level)) #easy, hard etc. instead of level number
 		if bool(self.population): #players and npc in the location:
 			message += "\nCreatures: "
 			for i in self.population:
@@ -100,6 +102,8 @@ class creature:
 	def teleport(self, x, y): #Move to location x, y. 
 		try:
 			locations[self.x][self.y].populationRemove(self.id) #It could happen that a creature is not actually in a location
+		except:
+			pass
 		locations[x][y].populationAdd(self.id)
 		self.x = x
 		self.y = y
@@ -421,21 +425,21 @@ class weapon(armor): #Really the only difference is the itemType
 				
 #Functions accessable by players
 def start(bot, update): #Initial message
-	sendMessage(bot, update, "Welcome to FransRPG! Type '/?' for instructions. ") #sendMessage() sends a message back to the one that used the command. bot and update gives that information.
+	sendMessage(bot, update, "Welcome to FransRPG! Type '/help' for instructions. ") #sendMessage() sends a message back to the one that used the command. bot and update gives that information.
 
 def help(bot, update): #Lists player commands
-	sendMessage(bot, update, "Type '/?' for this message.\
-	\nType '/stats [id]' to see that creature's stats. Player id's are their names. No id for yourself.\
-	\nType '/location [id]' to get info about your current location.\
-	\nType '/listPlayers' to see the location of all players.\
+	sendMessage(bot, update, "Type '/help' for this message.\
+	\nType '/stats [id]' to see that creature's stats. Player id's are their names. Enter no id for your own stats.\
+	\nType '/location [id]' to get info about that creature's current location.\
+	\nType '/players' to see all players and their locations.\
 	\nType '/join' to create a character.\
 	\nType '/attack [id]' to attack the creature with that id.\
 	\nType '/move [direction] [multiplier]' to move in any of directions n, ne, e, se, s, sw, w or nw. Multiplier is limited to your level.\
 	\nType '/venture' to explore your current location.\
 	\nType '/deposit [amount]' or '/withdraw [amount]' to move your gold when in Cromania.\
-	\nType '/giveMoney [amount] [playername]' to bring that gold to someone's bank.\
-	\nType '/fillStore' to reset the store's items.\
-	\nType '/viewStore' to see the content of the store.\
+	\nType '/give [amount] [playername]' to bring that amount of gold to someone's bank.\
+	\nType '/fill' to reset the store's items.\
+	\nType '/store' to see the content of the store.\
 	\nType '/save' to save the game to file. Autosave will occur after every 20 send messages.\
 	\nType '/load' to load the game from file.")
 
@@ -632,6 +636,9 @@ def do(bot, update, args): #Execute a Python command. Only allowed for certain p
 	else:
 		sendMessage(bot, update, "You have to be Storm for that.")
 	
+def test(bot, update, args):
+	print (args)
+
 def reset(bot, update): #Delete everything and start from the beginning. Only allowed for certain players.
 	if getName(update) == "Storm": #Id instead of name
 		global creatures
@@ -807,7 +814,7 @@ def getId(): #Returns first unoccupied id and marks it as occupied.
 	
 def sendMessage(bot, update, message): #Sends a message to Telegram, keeps track of autosave, adresses user.
 	global messageCount
-	bot.sendMessage(update.message.chat_id, text = ("@" + getName(update) + "\n" + message))
+	bot.sendMessage(chat_id = update.message.chat_id, text = ("@" + getName(update) + "\n" + message))
 	messageCount += 1
 	if messageCount >= 10:
 		save(bot, update)
@@ -817,33 +824,49 @@ storeObject = inventory(getId()) #The store, with items for purchase.
 
 #main
 def main():
-	updater = Updater(sys.argv[1]) #Something important for the Telegram interface. argv[1] should be the bot token
+	updater = Updater(token = sys.argv[1]) #Something important for the Telegram interface. argv[1] should be the bot token
 	
 	dispatcher = updater.dispatcher #The same
 	
-	#Commands accessable by players, some are double for the spelling-impaired:
-	dispatcher.addTelegramCommandHandler("start", start)
-	dispatcher.addTelegramCommandHandler("location", locationInfo)
-	dispatcher.addTelegramCommandHandler("stats", stats)
-	dispatcher.addTelegramCommandHandler("?", help)
-	dispatcher.addTelegramCommandHandler("join", join)
-	dispatcher.addTelegramCommandHandler("move", move)
-	dispatcher.addTelegramCommandHandler("attack", attack)
-	dispatcher.addTelegramCommandHandler("venture", venture)
-	dispatcher.addTelegramCommandHandler("deposit", deposit)
-	dispatcher.addTelegramCommandHandler("withdraw", withdraw)
-	dispatcher.addTelegramCommandHandler("giveMoney", giveMoney)
-	dispatcher.addTelegramCommandHandler("givemoney", giveMoney)
-	dispatcher.addTelegramCommandHandler("do", do)
-	dispatcher.addTelegramCommandHandler("save", save)
-	dispatcher.addTelegramCommandHandler("load", load)
-	dispatcher.addTelegramCommandHandler("reset", reset)
-	dispatcher.addTelegramCommandHandler("listPlayers", listPlayers)
-	dispatcher.addTelegramCommandHandler("listplayers", listPlayers)
-	dispatcher.addTelegramCommandHandler("fillStore", fillStore)
-	dispatcher.addTelegramCommandHandler("fillstore", fillStore)
-	dispatcher.addTelegramCommandHandler("viewStore", viewStore)
-	dispatcher.addTelegramCommandHandler("viewstore", viewStore)
+	#Commands accessable by players:
+	start_handler = CommandHandler("start", start)
+	dispatcher.add_handler(start_handler)
+	help_handler = CommandHandler("help", help)
+	dispatcher.add_handler(help_handler)
+	players_handler = CommandHandler("players", listPlayers)
+	dispatcher.add_handler(players_handler)
+	location_handler = CommandHandler("location", locationInfo)
+	dispatcher.add_handler(location_handler)
+	stats_handler = CommandHandler("stats", stats)
+	dispatcher.add_handler(stats_handler)
+	join_handler = CommandHandler("join", join)
+	dispatcher.add_handler(join_handler)
+	move_handler = CommandHandler("move", move)
+	dispatcher.add_handler(move_handler)
+	attack_handler = CommandHandler("attack", attack)
+	dispatcher.add_handler(attack_handler)
+	venture_handler = CommandHandler("venture", venture)
+	dispatcher.add_handler(venture_handler)
+	deposit_handler = CommandHandler("deposit", deposit)
+	dispatcher.add_handler(deposit_handler)
+	withdraw_handler = CommandHandler("withdraw", withdraw)
+	dispatcher.add_handler(withdraw_handler)
+	give_handler = CommandHandler("give", giveMoney)
+	dispatcher.add_handler(give_handler)
+	fill_handler = CommandHandler("fill", fillStore)
+	dispatcher.add_handler(fill_handler)
+	store_handler = CommandHandler("store", viewStore)
+	dispatcher.add_handler(store_handler)
+	do_handler = CommandHandler("do", do)
+	dispatcher.add_handler(do_handler)
+	test_handler = CommandHandler("test", test)
+	dispatcher.add_handler(test_handler)
+	save_handler = CommandHandler("save", save)
+	dispatcher.add_handler(save_handler)
+	load_handler = CommandHandler("load", load)
+	dispatcher.add_handler(load_handler)
+	reset_handler = CommandHandler("reset", reset)
+	dispatcher.add_handler(reset_handler)
 	
 	newLocation(0, 0, "Cromania", 1) #Create home city with level 1
 
