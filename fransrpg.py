@@ -647,20 +647,17 @@ def load(bot, update): #Load all creatures, items, locations etc. from file. Res
 
         
 def do(bot, update, args): #Execute a Python command. Only allowed for certain players.
-    if getTId(update) in superpowers:
+    if getTelegramId(update) in admins: #See if the id of the user matches one in the json file (which would mean the user is an admin)
         try:
             text = str(eval(str(" ".join(args)))) #Try to execute the command.
         except:
             text = "Invalid command."
         sendMessage(bot, update, text)
     else:
-        sendMessage(bot, update, "You have to be Storm for that.")
-    
-def test(bot, update, args):
-    print (args)
+        sendMessage(bot, update, "You have to be an admin for that.")
 
 def reset(bot, update): #Delete everything and start from the beginning. Only allowed for certain players.
-    if getName(update) == "Storm": #Id instead of name
+    if getTelegramId(update) in admins: 
         global creatures
         global items
         global locations
@@ -679,7 +676,7 @@ def reset(bot, update): #Delete everything and start from the beginning. Only al
         newLocation(0, 0, "Cromania", 1) #Create initial location.
         sendMessage(bot, update, "Reset all game data! Type '/save' to make permanent or '/load' to undo.")
     else:
-        sendMessage(bot, update, "You have to be Storm for that.")
+        sendMessage(bot, update, "You have to be an admin for that.")
 
 def fillStore(bot, update): #Create 5 items per player, with about their level.
     for i in storeObject.inventory: #Clear old store inventory
@@ -778,7 +775,7 @@ def getReward(player, rating): #Get some gold based on the rating. Gives a fair 
 def getName(update): #update contains information about who used a command. This extracts the user's name from it.
     return str(update.message.from_user.first_name)
 
-def getTId(update):
+def getTelegramId(update):
     return str(update.message.from_user.id)
 
 def coordsFormat(x, y): #Returns a fancier representation of coordinates.
@@ -845,25 +842,18 @@ def sendMessage(bot, update, message): #Sends a message to Telegram, keeps track
         save(bot, update)
         messageCount = 0
 
-def tijdelijk(bot, update):
-    print(update)
-    print(dir(update.message))
-    sendMessage(bot, update, "Danku mijnheer {}".format(getName(update)))
-
-
 #main
-
 def main():
     global storeObject
     storeObject = inventory(getId()) #The store, with items for purchase.
-    global superpowers
-    configfile = json.load(open(argv[1]))
+    global admins
+    configfile = json.load(open(argv[1])) #Try to load admin ids and bot token
     try:
-        superpowers = configfile["superpowers"]
+        admins = configfile["superpowers"]
     except:
         pass
     
-    token = configfile["token"]
+    token = configfile["token"] #Load the token from the json file.
     updater = Updater(token = token) #Something important for the Telegram interface. argv[1] should be the bot token
     
     dispatcher = updater.dispatcher #The same
