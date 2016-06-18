@@ -1,9 +1,10 @@
 #Imports
-import sys
+from sys import argv
 from telegram.ext import Updater, CommandHandler
 from random import random, choice, randint
 import pickle
 import logging
+import json
 
 #Telegram bot log
 logging.basicConfig(
@@ -444,7 +445,9 @@ def help(bot, update): #Lists player commands
 	\nType '/fill' to reset the store's items.\
 	\nType '/shop' to see the content of the store.\
 	\nType '/save' to save the game to file. Autosave will occur after every 20 send messages.\
-	\nType '/load' to load the game from file.")
+	\nType '/load' to load the game from file.\
+	\nItems and shop and fill do not work yet.")
+
 
 def stats(bot, update, args): #Get info about a player or creature
 	if args:
@@ -644,7 +647,7 @@ def load(bot, update): #Load all creatures, items, locations etc. from file. Res
 
 		
 def do(bot, update, args): #Execute a Python command. Only allowed for certain players.
-	if getName(update) == "Storm":
+	if getTId(update) in superpowers:
 		try:
 			text = str(eval(str(" ".join(args)))) #Try to execute the command.
 		except:
@@ -771,10 +774,13 @@ def getReward(player, rating): #Get some gold based on the rating. Gives a fair 
 		amount = 1 #Always at least 1 gold.
 	player.gold += amount
 	return "Your loot is " + str(amount) + " gold. "
-	
+
 def getName(update): #update contains information about who used a command. This extracts the user's name from it.
 	return str(update.message.from_user.first_name)
-	
+
+def getTId(update):
+    return str(update.message.from_user.id)
+
 def coordsFormat(x, y): #Returns a fancier representation of coordinates.
 	if y >= 0:
 		yText = str(y) + "N, "
@@ -839,13 +845,26 @@ def sendMessage(bot, update, message): #Sends a message to Telegram, keeps track
 		save(bot, update)
 		messageCount = 0
 
+def tijdelijk(bot, update):
+    print(update)
+    print(dir(update.message))
+    sendMessage(bot, update, "Danku mijnheer {}".format(getName(update)))
+
 
 #main
 
 def main():
 	global storeObject
 	storeObject = inventory(getId()) #The store, with items for purchase.
-	updater = Updater(token = sys.argv[1]) #Something important for the Telegram interface. argv[1] should be the bot token
+	global superpowers
+	configfile = json.load(open(argv[1]))
+	try:
+		superpowers = configfile["superpowers"]
+	except:
+		pass
+	
+	token = configfile["token"]
+	updater = Updater(token = token) #Something important for the Telegram interface. argv[1] should be the bot token
 	
 	dispatcher = updater.dispatcher #The same
 	
@@ -874,10 +893,10 @@ def main():
 	dispatcher.add_handler(withdraw_handler)
 	give_handler = CommandHandler("give", giveMoney, pass_args=True)
 	dispatcher.add_handler(give_handler)
-	fill_handler = CommandHandler("fill", fillStore)
-	dispatcher.add_handler(fill_handler)
-	store_handler = CommandHandler("shop", viewStore)
-	dispatcher.add_handler(store_handler)
+	#fill_handler = CommandHandler("fill", fillStore)
+	#dispatcher.add_handler(fill_handler)
+	#store_handler = CommandHandler("shop", viewStore)
+	#dispatcher.add_handler(store_handler)
 	do_handler = CommandHandler("do", do, pass_args=True)
 	dispatcher.add_handler(do_handler)
 	test_handler = CommandHandler("test", test, pass_args=True)
@@ -888,6 +907,8 @@ def main():
 	dispatcher.add_handler(load_handler)
 	reset_handler = CommandHandler("reset", reset)
 	dispatcher.add_handler(reset_handler)
+	#tijdelijk_handler = CommandHandler("tijd", tijdelijk)
+	#dispatcher.add_handler(tijdelijk_handler)
 	
 	newLocation(0, 0, "Cromania", 1) #Create home city with level 1
 	
