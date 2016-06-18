@@ -12,36 +12,36 @@ armorItemsAdj = ['Old', 'Broken', 'Gross', 'Skin', 'Pre Historic', 'Ripped', 'Un
 
 
 def newItemName(type, level):
-	if type == "Healing Item":
-		itemsNouns = healingItems
-		itemsAdj = healingItemsAdj
-	elif type == "Weapon":
-		itemsNouns = weaponItems
-		itemsAdj = weaponItemsAdj
-	elif type == "Armor":
-		itemsNouns = armorItems
-		itemsAdj = armorItemsAdj
-	name = ""
-	itemLower = round(level / 100 * len(itemsNouns)) - 3 #Ratio of current level to max level -> ratio of nth healing item to all healing items
-	itemUpper = round(level / 100 * len(itemsNouns)) + 3
-	if itemLower < 0:
-		itemLower = 0
-	if itemUpper > len(itemsNouns):
-		itemLower = len(itemsNouns) - 10 #Extra items when near max level
+    if type == "Healing Item":
+        itemsNouns = healingItems
+        itemsAdj = healingItemsAdj
+    elif type == "Weapon":
+        itemsNouns = weaponItems
+        itemsAdj = weaponItemsAdj
+    elif type == "Armor":
+        itemsNouns = armorItems
+        itemsAdj = armorItemsAdj
+    name = ""
+    itemLower = round(level / 100 * len(itemsNouns)) - 3 #Ratio of current level to max level -> ratio of nth healing item to all healing items
+    itemUpper = round(level / 100 * len(itemsNouns)) + 3
+    if itemLower < 0:
+        itemLower = 0
+    if itemUpper > len(itemsNouns):
+        itemLower = len(itemsNouns) - 10 #Extra items when near max level
 
-	adjLower = round(level / 100 * len(itemsAdj)) - 5
-	adjUpper = round(level / 100 * len(itemsAdj)) + 5
-	if adjLower < 0:
-		adjLower = 0
-	if adjUpper > len(itemsAdj):
-		adjLower = len(itemsAdj) - 15 #Extra Adj near when max level
-	adj = ""
-	for i in range(randint(1, 2) + round(level / 33)): #Min 1, max 5 Adj
-		while adj in name:
-			adj = choice(itemsAdj[adjLower : adjUpper])
-		name += adj + " "
-	name += choice(itemsNouns[itemLower : itemUpper])
-	return name
+    adjLower = round(level / 100 * len(itemsAdj)) - 5
+    adjUpper = round(level / 100 * len(itemsAdj)) + 5
+    if adjLower < 0:
+        adjLower = 0
+    if adjUpper > len(itemsAdj):
+        adjLower = len(itemsAdj) - 15 #Extra Adj near when max level
+    adj = ""
+    for i in range(randint(1, 2) + round(level / 33)): #Min 1, max 5 Adj
+        while adj in name:
+            adj = choice(itemsAdj[adjLower : adjUpper])
+        name += adj + " "
+    name += choice(itemsNouns[itemLower : itemUpper])
+    return name
 
 for i in range(100):
-	print(i, newItemName("Healing Item", i))
+    print(i, newItemName("Healing Item", i))

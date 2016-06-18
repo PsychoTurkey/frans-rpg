@@ -7,14 +7,14 @@ convert = [["Goat",2],["Mad Brat",4],["Brat",3],["Goblin",6],["Squirel",1],["Ang
 
 maxlvl = 0
 for i in convert:
-	if i[1] > maxlvl:
-		maxlvl = i[1]
+    if i[1] > maxlvl:
+        maxlvl = i[1]
 
 result = [[0] for x in range(maxlvl + 1)]
 
 for i in convert:
-	if result[i[1]] == [0]:
-		result[i[1]] = [i[0]]
-	else:
-		result[i[1]] += [i[0]]
+    if result[i[1]] == [0]:
+        result[i[1]] = [i[0]]
+    else:
+        result[i[1]] += [i[0]]
 print(result)
