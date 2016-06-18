@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #Imports
 from sys import argv
 from telegram.ext import Updater, CommandHandler
