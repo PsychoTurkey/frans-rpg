@@ -1,7 +1,7 @@
 # frans-rpg
 
 Things that really should be changed:
-- Make player ids telegram ids instead of their names (and change everything to print both ids and names) (especially for /do command)
+- Make player ids telegram ids instead of their names (and change everything to print both ids and names)
 - Make the random NPC choice bigger when a location's level >= 95
 - Marriage
 - Generate and send image of the map
@@ -14,4 +14,3 @@ Things that really should be changed:
 - Loan function: get an amount of money (to your inventory gold), but all money you store in bank will be taken untill the loan has been repaid.
 - I don't recall ever seeing one of the last words of items adjectives and names. The algorithm should be checked and tested.
 - Have a toggleable pvp setting
-- Should we import entire sys or only sys.argsv[]?
