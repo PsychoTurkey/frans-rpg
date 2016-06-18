@@ -10,7 +10,7 @@ import json
 #Telegram bot log
 logging.basicConfig(
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        level=logging.INFO)
+        level=15)
 logger = logging.getLogger(__name__)
 
 #Dict with LocationTypeName : [all possible NPCs]   The enemies list is in order from weak to strong
@@ -26,7 +26,7 @@ weaponItemsAdj = ['Broken', 'Cardboard', 'Old', 'Toy', 'Dull', 'Weaponized', 'Pl
 armorItems = ['Underwear', 'Bra', 'Body Paint', 'Fierce Frown', 'Paper Shopping Bag Hat', 'Trousers', 'Arm Protectors', 'Leg Protectors', 'Bikini', 'Sweater', 'Back Protectors', 'Hat', 'Earcuffs', 'Chest Protectors', 'Water Wings', 'Cooking Pan Helmet', 'Head Protectors', 'Goggles', 'Fake Mustache', 'Arm Plating', 'Cape', 'Hockey Mask', 'Leg Plating', 'Gloves', 'Bucket Helmet', 'Back Plating', 'Kilt', 'Pumpkin Helmet', 'Chest Plating', 'Real Helmet', 'Boots', 'Head Plating', 'Suit', 'Arm Armor', 'Garbage Can Lid Shield', 'Leg Armor', 'Crown', 'Back Armor', 'Shield', 'Chest Armor', 'Vest', 'Head Armor', 'Power Suit', 'Arm Power Armor', 'Turtle Shell', 'Leg Power Armor', 'Reactive Armor', 'Back Power Armor', 'Power Shield', "Fuck This Shit I'm Going Naked", 'Sarcasm', 'Top Hat', 'Chest Power Armor', 'Magical Barrier', 'Head Power Armor', 'Tank']
 armorItemsAdj = ['Old', 'Broken', 'Gross', 'Skin', 'Pre Historic', 'Ripped', 'Unwashed', 'Aluminum Foil', 'Black', 'Wooden', 'Trashy', 'Implausible', 'Made In China', 'Brittle', 'Hole Filled', 'Shabby', 'Cardboard', 'Inferior', 'Weak', 'Hide', 'Paper', 'Slippery', 'Falling Apart', 'Leather', 'Slutty', 'Homemade', 'Light', 'Not So Bad', 'Duct Tape', "Gentleman's", 'Good', 'Copper', 'Sneaking', 'Protective', 'Roman', 'Cool', 'Bronze', 'Feathered', 'Makes You Look Skinny', 'Fireproof', 'Tough', 'Shiny', 'Huge', 'Analog', 'Iron', 'Made In Germany', 'Special', 'Sparkling', 'Stunning', 'Super', 'White', 'Winged', 'Steel', 'Heavy', 'Bulletproof', 'Holy', 'Invisible', 'Spock', 'Beautiful', 'Twinkling', 'Emerald Inlaid', 'Legendary', 'Sacred', 'Ironic', 'Dragon Scales', 'Bad As Badass', 'Fabulously Amazebaltastic', 'Futuristic', 'Unicorn Hide', 'Asian', "Master's", 'Perfect']
 
-noWeaponDamage = 2 #Players can't do anything if they can't fight. Useful when testing.
+noWeaponDamage = 5 #Players can't do anything if they can't fight. Useful when testing.
 initialLevel = 1 #Change for testing purposes: new characters start at this level.
 
 locations = {} #Multidimensional dictionary with coordinates and their location objects {x : {y : object}}
@@ -48,27 +48,27 @@ class location:
         self.level = level
         self.population = [] #Contains NPC ids
         self.players = [] # " player
-    
+
     #Add or remove a NPC or player from the lists:
     def populationAdd(self, id):
         if not id in self.population:
             self.population += [id]
-    
+
     def populationRemove(self, id):
         if id in self.population:
             self.population.pop(self.population.index(id))
-    
+
     def playerEnters(self, id):
         if not id in self.players:
             self.players += [id]
-    
+
     def playerLeaves(self, id):
         if id in self.players:
             self.players.pop(self.players.index(id))
-        
+
     #Display its own stats:
     def info(self):
-        message = ("Terrain: " + self.locationType + 
+        message = ("Terrain: " + self.locationType +
             "\nCoordinates: " + coordsFormat(self.x, self.y) +  #A fancier format of the coordinates
             "\nDifficulty: " + getRating(self.level)) #easy, hard etc. instead of level number
         if bool(self.population): #players and npc in the location:
@@ -81,7 +81,7 @@ class location:
         return message
 
 class creature:
-    def __init__(self, x, y, id, creatureType, level):  
+    def __init__(self, x, y, id, creatureType, level):
         self.x = x #Initial location
         self.y = y
         self.id = id #Refer to the creature (ingame as well) with this number
@@ -98,7 +98,7 @@ class creature:
         self.hp = self.maxHp
         self.damage = getItemEffect("Weapon", level) #NPCs get weapon and armor ratings as if they had weapons of their own level
         self.armor = getItemEffect("Armor", level)
-            
+
 
     def teleport(self, x, y): #Move to location x, y. 
         try:
@@ -108,7 +108,7 @@ class creature:
         locations[x][y].populationAdd(self.id)
         self.x = x
         self.y = y
-        
+
     def die(self): #Respawn without gold and xp if it is a player, delete if it is a NPC.
         if self.creatureType == "Player":
             self.xp = 0
@@ -121,7 +121,7 @@ class creature:
             ids[self.id] = True
             locations[self.x][self.y].populationRemove(self.id)
             del creatures[self.id]
-            
+
     def attack(self, targetId): #Checks if attack is possible, subtracts a certain damage, handles death and rewards.
         fightBack = False
         if self.x == 0 and self.y == 0:
@@ -152,7 +152,7 @@ class creature:
                     message += target.name + " still has " + str(target.hp) + " health. "
             else:
                 return [target.name + " absorbed all damage... ", fightBack]
-        
+
         elif targetId in locations[self.x][self.y].population: #...or a NPC in the right location:
             fightBack = True #If a NPC is attacked and does not die, it will attack back.
             target = creatures[targetId]
@@ -180,12 +180,12 @@ class creature:
         else:
             return ["Target doesn't exist in this location. ", fightBack]
         return [message, fightBack]
-        
+
     def heal(self, amount): #Add HP and reset if the result exceeds maxHp.
         self.hp += amount
         if self.hp > self.maxHp:
             self.hp = maxHp
-    
+
     def stats(self): #Print the creature's stats.
         return "Name: " + self.name + \
             "\nId: " + str(self.id) + \
@@ -199,7 +199,7 @@ class inventory: #A class that can manage items. Used for shop and players.
     def __init__(self, id):
             self.id = id
             self.inventory = [] #Holds the item ids
-            
+
     def gainItem(self, itemId): #Add or remove an item from this inventory:
         if not itemId in self.inventory:
             self.inventory += [itemId]
@@ -207,7 +207,7 @@ class inventory: #A class that can manage items. Used for shop and players.
     def dropItem(self, itemId):
         if itemId in self.inventory:
             self.inventory.pop(self.inventory.index(itemId))
-        
+
 class player(creature, inventory):
     def __init__(self, id): #Todo: sepparate ids and names
         self.x = 0 #Starts in Cromania
@@ -229,7 +229,7 @@ class player(creature, inventory):
         self.deaths = 0 #Remember how often someone has died.
         self.inventory = [] #Id's of items in inventory.
         self.equipped = [-1, -1] #Id's of equipped items: [weapon, armor]. -1 means nothing equiped.
-    
+
     def move(self, args): #Move between locations, checks for valid input, can move in 8 directions, distance multiplier is limeted to one's level. Eg: "/m se 5" moves some 5 locations south, 5 locations east.
         direction = str(args[0]) #First user input ("/m" base command is ignored)
         if not(direction == "n" or direction == "s" or direction == "w" or direction == "e" or direction == "ne" or direction == "nw" or direction == "se" or direction == "sw"):
@@ -250,16 +250,16 @@ class player(creature, inventory):
                 return "Invalid multiplier. "
             except IndexError: #Ignore if no multiplier is given
                 pass
-            
+
             locations[self.x][self.y].playerLeaves(self.id) #Leave old location
-            
+
             if direction == "n": #Calculate new coordinates
                 self.y += multiplier
             elif direction == "s":
                 self.y -= multiplier
             elif direction == "w":
                 self.x -= multiplier
-            elif direction == "e": 
+            elif direction == "e":
                 self.x += multiplier
             elif direction == "ne":
                 self.y += multiplier
@@ -267,13 +267,13 @@ class player(creature, inventory):
             elif direction == "nw":
                 self.y += multiplier
                 self.x -= multiplier
-            elif direction == "se": 
+            elif direction == "se":
                 self.y -= multiplier
                 self.x += multiplier
             else:
                 self.y -= multiplier
                 self.x -= multiplier
-                
+
             if not self.x in locations: #Create new a new location if it doesn't exist, newLocation() returns a message with info of the location.
                 message = newLocation(self.x, self.y, choice(list(locationTypes.keys())), abs(self.level + randint(-2, 2)))
             elif not self.y in locations[self.x]:
@@ -284,7 +284,7 @@ class player(creature, inventory):
             return "You now are in " + coordsFormat(self.x, self.y) + ". " + message
         else: #If one fails to move, it is attacked by a random creature in the location.
             return "You failed to flee and were attacked! " + creatures[choice(locations[self.x][self.y].population)].attack(self.id)[0] #The first thing in the list is the attack message, the second the fightBack boolean.
-    
+
     def gainXp(self, xp): #Handle xp rewards, level ups and max level.
         if xp <= 0: #Ignore if no xp
             return
@@ -304,7 +304,7 @@ class player(creature, inventory):
             return message
         else:
             return ""
-    
+
     def teleport(self, x, y): #Locations use different methods when a player moves then when a NPC does
         try:
             locations[self.x][self.y].playerLeaves(self.id)
@@ -313,7 +313,7 @@ class player(creature, inventory):
         locations[x][y].playerEnters(self.id)
         self.x = x
         self.y = y
-    
+
     def stats(self): #All the player's stats
         return "Id: " + self.name + \
             "\nLevel: " + str(self.level) + \
@@ -327,7 +327,7 @@ class player(creature, inventory):
             "\nPlayer kills: " + str(self.playerKills) + \
             "\nNPC kills: " + str(self.kills) + \
             "\nDeaths: " + str(self.deaths)
-            
+
     def venture(self): #When venturing, something happens within the location.
         curLoc = locations[self.x][self.y] #Easier reference
         if curLoc.locationType == "Cromania": #Can't venture in Cromania
@@ -358,7 +358,7 @@ class player(creature, inventory):
                 return "You encountered a" + creatures[enemyId].n + " " + creatures[enemyId].name + " with id " + str(enemyId) + ". "
         else:
             return "You were attacked! " + creatures[choice(locations[self.x][self.y].population)].attack(self.id)[0]
-                        
+
     def equip(self, itemId): #Equip an item and adjust stats.
         if items[itemId].level <= self.level:
             if items[itemId].itemType == "Weapon":
@@ -369,7 +369,7 @@ class player(creature, inventory):
                 self.armor = items[itemId].effect
         else:
             return "You have to be at least level " + str(items[itemId].level) + " to use this item." #Items have level caps
-    
+
     def unequip(self, itemId): #Unequip an item and adjust stats.
         if items[itemId].itemType == "Weapon":
             self.equipped[0] = -1 #-1 means unequipped.
@@ -377,7 +377,7 @@ class player(creature, inventory):
         elif items[itemId].itemType == "Armor":
             self.equipped[1] = -1
             self.armor = 0
-            
+
 class item: #Parent class for healing items, gear.
     def __init__(self, id, name, itemType, value, owner, inventoryId):
         self.id = id #Uses same id system as NPCs
@@ -386,19 +386,19 @@ class item: #Parent class for healing items, gear.
         self.value = value #Price in gold
         self.owner = owner #id of the shop or player that owns it. Used for market.
         self.inventoryId = inventoryId #Inventory it's in.
-    
+
     def destroy(self): #Delete the item, remove it from an inventory
         ids[self.id] = True
         inventories[self.inventoryId].dropItem(self.id)
         del items[self.id]
-    
+
     #def market(self, price): #Move to market with a player-chosen price: other players can buy it, but the seller can't use it anymore.s
 
 class healingItem(item): #Use to regenerate health.
     def __init__(self, id, name, value, effect, owner, inventoryId):
         item.__init__(self, id, name, "Healing Item", value, owner, inventoryId)
         self.effect = effect #The parentclass item doesn't have effect because future items may not need it. 
-        
+
     def use(self, userId): #Actually use the item
         if userId == inventoryId:
             creatures[userId].heal(self.effect)
@@ -413,20 +413,20 @@ class armor(item):
         item.__init__(self, id, name, "Armor", value, owner, inventoryId)
         self.level = level #Minimum required level to equip this item
         self.effect = effect #armor points
-        
+
     def use(self, userId): #Toggle equip
         if userId == inventoryId:
             if self.id in creatures[userId].equipped:
                 creatures[userId].unequip(self.id)
             else:
                 creatures[userId].equip(self.id)
-                
+
 class weapon(armor): #Really the only difference is the itemType
     def __init__(self, id, name, level, value, effect, owner, inventoryId):
         item.__init__(self, id, name, "Weapon", value, owner, inventoryId)
         self.level = level
         self.effect = effect
-                
+
 #Functions accessable by players
 def start(bot, update): #Initial message
     sendMessage(bot, update, "Welcome to FransRPG! Type '/help' for instructions. ") #sendMessage() sends a message back to the one that used the command. bot and update gives that information.
@@ -466,7 +466,7 @@ def stats(bot, update, args): #Get info about a player or creature
             sendMessage(bot, update, creatures[id].stats())
         else:
             sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
-    
+
 def locationInfo(bot, update, args): #Gives info about the location a creature (players are creatures as well) is in.
     if len(args) == 1:
         id = args[0]
@@ -484,21 +484,20 @@ def locationInfo(bot, update, args): #Gives info about the location a creature (
             sendMessage(bot, update, "That location is not yet discovered.")
         except ValueError:
             sendMessage(bot, update, "You passed an invalid value!")
-        
+
     else:
         id = getName(update) #No argument gives info about the location of the player itself
         if id in creatures:
             sendMessage(bot, update, locations[creatures[id].x][creatures[id].y].info())
         else:
             sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
-    
+
 def listPlayers(bot, update): #View all players and their coordinates.
     message = ""
     for creature in list(creatures.values()):
         if creature.creatureType == "Player":
-            message += "{} level {}: {}\n".format(creature.name, creature.level, coordsFormat(creature.x, creature.y)) 
+            message += "{} level {}: {}\n".format(creature.name, creature.level, coordsFormat(creature.x, creature.y))
     sendMessage(bot, update, message)
-    
 
 def join(bot, update): #Create a character to join the game!
     id = getName(update) #Extracts user name from the update class.
@@ -538,14 +537,14 @@ def attack(bot, update, args): #Attack creature with this id. Only allowed in gr
             sendMessage(bot, update, str(creatures[target].attack(id)[0]))
     else:
         sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
-            
+
 def venture(bot, update): #Adventure in the location, with a chance on loot or enemies.
     id = getName(update)
     if id in creatures:
         sendMessage(bot, update, creatures[id].venture())
     else:
         sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
-    
+
 def deposit(bot, update, args): #Transfer gold to bank
     id = getName(update)
     if creatures[id].x != 0 or creatures[id].y != 0: #Only allowed in Cromania
@@ -610,7 +609,7 @@ def giveMoney(bot, update, args): #Transfer gold (inventory gold, not bank gold)
             sendMessage(bot, update, "That character does not exsist...")
     else:
         sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
-        
+
 def save(bot, update): #Save all creatures, items, locations etc. to file. Reset autosave. 
     with open("fransrpg.pkl", "wb") as output:
         global messageCount
@@ -642,10 +641,9 @@ def load(bot, update): #Load all creatures, items, locations etc. from file. Res
         bank = pickle.load(input)
         storeObject = pickle.load(input)
         messageCount = 0
-        
+
         sendMessage(bot, update, "Loaded from file.")
 
-        
 def do(bot, update, args): #Execute a Python command. Only allowed for certain players.
     if getTelegramId(update) in admins: #See if the id of the user matches one in the json file (which would mean the user is an admin)
         try:
@@ -657,7 +655,7 @@ def do(bot, update, args): #Execute a Python command. Only allowed for certain p
         sendMessage(bot, update, "You have to be an admin for that.")
 
 def reset(bot, update): #Delete everything and start from the beginning. Only allowed for certain players.
-    if getTelegramId(update) in admins: 
+    if getTelegramId(update) in admins:
         global creatures
         global items
         global locations
@@ -719,8 +717,7 @@ def viewStore(bot, update): #Print all items currently in the store
         sendMessage(bot, update, message)
     else:
         sendMessage(bot, update, "The store is currently empty.")
-        
-    
+
 #Various functions for formatting, calculating values, creating etc.
 def newLocation(x, y, locationType, level): #Create a new location instance and return a message describing it.
     if not x in locations:
@@ -763,7 +760,7 @@ def newItemName(type, level): #Generates an item name. Number of adjectives base
         name += adj + " "
     name += choice(itemsNouns[itemLower : itemUpper])
     return name
-    
+
 def getReward(player, rating): #Get some gold based on the rating. Gives a fair amount when the rating equals the level of a killed NPC.
     max = round(0.05 * rating ** 2 + 0.5 * rating)
     amount = randint(round(max / 2), max)
@@ -788,13 +785,13 @@ def coordsFormat(x, y): #Returns a fancier representation of coordinates.
     else:
         xText = str(x) + "E"
     return yText + xText
-    
+
 def getLevelXp(level): #Calculates xp needed for players to level up, per level.
     return (round(level ** 1.1)+9)
-    
+
 def getLevelHp(level): #Calculates the max hp of creatues, per level.
     return int(0.5 * level ** 2 + 0.5 * level + 9)
-    
+
 def getItemEffect(item, level): #Gives amount of hp healed, damage or armor based on an item's level.
     if item == "Healing Item":
         return randint(round(0.9 * getLevelHp(level) / (0.1 * level + 2)), round(1.1 * getLevelHp(level) / (0.1 * level + 2)))
@@ -802,7 +799,7 @@ def getItemEffect(item, level): #Gives amount of hp healed, damage or armor base
         return randint(round(getLevelHp(level) / 15 * 1.1), round(getLevelHp(level) / 12 * 1.1))
     elif item == "Armor":
         return randint(round(getLevelHp(level) / 60 * 1.1), round(getLevelHp(level) / 30 * 1.1))
-        
+
 def getRating(level): #Convert location levels to this range.
     if level <= 10:
         return "very easy"
@@ -833,7 +830,7 @@ def getId(): #Returns first unoccupied id and marks it as occupied.
             return i
     ids += [False]
     return len(ids) - 1
-    
+
 def sendMessage(bot, update, message): #Sends a message to Telegram, keeps track of autosave, adresses user.
     global messageCount
     bot.sendMessage(chat_id = update.message.chat_id, text = ("@" + getName(update) + "\n" + message))
@@ -852,12 +849,12 @@ def main():
         admins = configfile["superpowers"]
     except:
         pass
-    
+
     token = configfile["token"] #Load the token from the json file.
     updater = Updater(token = token) #Something important for the Telegram interface. argv[1] should be the bot token
-    
+
     dispatcher = updater.dispatcher #The same
-    
+
     #Commands accessable by players:
     start_handler = CommandHandler("start", start)
     dispatcher.add_handler(start_handler)
@@ -889,8 +886,6 @@ def main():
     #dispatcher.add_handler(store_handler)
     do_handler = CommandHandler("do", do, pass_args=True)
     dispatcher.add_handler(do_handler)
-    test_handler = CommandHandler("test", test, pass_args=True)
-    dispatcher.add_handler(test_handler)
     save_handler = CommandHandler("save", save)
     dispatcher.add_handler(save_handler)
     load_handler = CommandHandler("load", load)
@@ -899,9 +894,9 @@ def main():
     dispatcher.add_handler(reset_handler)
     #tijdelijk_handler = CommandHandler("tijd", tijdelijk)
     #dispatcher.add_handler(tijdelijk_handler)
-    
+
     newLocation(0, 0, "Cromania", 1) #Create home city with level 1
-    
+
     inventories[storeObject.id] = storeObject
 
     updater.start_polling() #Start waiting for commands
