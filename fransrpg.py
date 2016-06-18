@@ -448,7 +448,6 @@ def help(bot, update): #Lists player commands
     \nType '/load' to load the game from file.\
     \nItems and shop and fill do not work yet.")
 
-
 def stats(bot, update, args): #Get info about a player or creature
     if args:
         id = args[0]
