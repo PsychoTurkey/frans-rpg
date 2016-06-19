@@ -26,8 +26,10 @@ weaponItemsAdj = ['Broken', 'Cardboard', 'Old', 'Toy', 'Dull', 'Weaponized', 'Pl
 armorItems = ['Underwear', 'Bra', 'Body Paint', 'Fierce Frown', 'Paper Shopping Bag Hat', 'Trousers', 'Arm Protectors', 'Leg Protectors', 'Bikini', 'Sweater', 'Back Protectors', 'Hat', 'Earcuffs', 'Chest Protectors', 'Water Wings', 'Cooking Pan Helmet', 'Head Protectors', 'Goggles', 'Fake Mustache', 'Arm Plating', 'Cape', 'Hockey Mask', 'Leg Plating', 'Gloves', 'Bucket Helmet', 'Back Plating', 'Kilt', 'Pumpkin Helmet', 'Chest Plating', 'Real Helmet', 'Boots', 'Head Plating', 'Suit', 'Arm Armor', 'Garbage Can Lid Shield', 'Leg Armor', 'Crown', 'Back Armor', 'Shield', 'Chest Armor', 'Vest', 'Head Armor', 'Power Suit', 'Arm Power Armor', 'Turtle Shell', 'Leg Power Armor', 'Reactive Armor', 'Back Power Armor', 'Power Shield', "Fuck This Shit I'm Going Naked", 'Sarcasm', 'Top Hat', 'Chest Power Armor', 'Magical Barrier', 'Head Power Armor', 'Tank']
 armorItemsAdj = ['Old', 'Broken', 'Gross', 'Skin', 'Pre Historic', 'Ripped', 'Unwashed', 'Aluminum Foil', 'Black', 'Wooden', 'Trashy', 'Implausible', 'Made In China', 'Brittle', 'Hole Filled', 'Shabby', 'Cardboard', 'Inferior', 'Weak', 'Hide', 'Paper', 'Slippery', 'Falling Apart', 'Leather', 'Slutty', 'Homemade', 'Light', 'Not So Bad', 'Duct Tape', "Gentleman's", 'Good', 'Copper', 'Sneaking', 'Protective', 'Roman', 'Cool', 'Bronze', 'Feathered', 'Makes You Look Skinny', 'Fireproof', 'Tough', 'Shiny', 'Huge', 'Analog', 'Iron', 'Made In Germany', 'Special', 'Sparkling', 'Stunning', 'Super', 'White', 'Winged', 'Steel', 'Heavy', 'Bulletproof', 'Holy', 'Invisible', 'Spock', 'Beautiful', 'Twinkling', 'Emerald Inlaid', 'Legendary', 'Sacred', 'Ironic', 'Dragon Scales', 'Bad As Badass', 'Fabulously Amazebaltastic', 'Futuristic', 'Unicorn Hide', 'Asian', "Master's", 'Perfect']
 
-noWeaponDamage = 5 #Players can't do anything if they can't fight. Useful when testing.
-initialLevel = 1 #Change for testing purposes: new characters start at this level.
+#cheats:
+noWeaponDamage = 1 #Players can't do anything if they can't fight.
+initialLevel = 1 #New characters start at this level.
+initialGold = 0 #Gold in the player's inventory when they create a character. Bank already has 10.
 
 locations = {} #Multidimensional dictionary with coordinates and their location objects {x : {y : object}}
 creatures = {} #All creature id's and their objects {id : object}. Contains players as well.
@@ -222,7 +224,7 @@ class player(creature, inventory):
         self.hp = self.maxHp
         self.damage = noWeaponDamage #Initial stats
         self.armor = 0
-        self.gold = 0 #Gold that the player currently has on them. One loses it on death.
+        self.gold = initialGold #Gold that the player currently has on them. One loses it on death.
         bank[id] = 10 #Money that is safe from dangers.
         self.playerKills = 0 #Remember how many players someone has killed.
         self.kills = 0 #Remember how many NPCs someone has killed.
@@ -353,7 +355,8 @@ class player(creature, inventory):
                 if lower < 0:
                     lower = 0
                 if upper >= len(locationTypes[curLoc.locationType]):
-                    upper = len(locationTypes[curLoc.locationType]) #Upper can be the actual length because the slice in the next line excludes it.
+                    lower = len(locationTypes[curLoc.locationType]) - 10
+
                 creatures[enemyId] = creature(self.x, self.y, enemyId, choice(locationTypes[curLoc.locationType][lower : upper]), level)
                 return "You encountered a" + creatures[enemyId].n + " " + creatures[enemyId].name + " with id " + str(enemyId) + ". "
         else:
@@ -387,6 +390,14 @@ class item: #Parent class for healing items, gear.
         self.owner = owner #id of the shop or player that owns it. Used for market.
         self.inventoryId = inventoryId #Inventory it's in.
 
+    def changeInventory(self, newId, newOwner = False):
+        """Changes the inventory the item is in to newId, and if newOwner is True change the owner as well."""
+        inventories[self.inventoryId].dropItem(self.id)
+        self.inventoryId = newId
+        inventories[self.inventoryId].gainItem(self.id)
+        if newOwner:
+            self.owner = newOwner
+
     def destroy(self): #Delete the item, remove it from an inventory
         ids[self.id] = True
         inventories[self.inventoryId].dropItem(self.id)
@@ -400,13 +411,10 @@ class healingItem(item): #Use to regenerate health.
         self.effect = effect #The parentclass item doesn't have effect because future items may not need it. 
 
     def use(self, userId): #Actually use the item
-        if userId == inventoryId:
-            creatures[userId].heal(self.effect)
-            message = "You used " + self.name + " healing " + str(self.effect) + ". "
-            self.destroy() #Single use
-            return message
-        else:
-            return self.name + " is not in your inventory!"
+        creatures[userId].heal(self.effect)
+        message = "You used " + self.name + " healing " + str(self.effect) + ". "
+        self.destroy() #Single use
+        return message
 
 class armor(item):
     def __init__(self, id, name, level, value, effect, owner, inventoryId):
@@ -415,11 +423,12 @@ class armor(item):
         self.effect = effect #armor points
 
     def use(self, userId): #Toggle equip
-        if userId == inventoryId:
-            if self.id in creatures[userId].equipped:
-                creatures[userId].unequip(self.id)
-            else:
-                creatures[userId].equip(self.id)
+        if self.id in creatures[userId].equipped:
+            creatures[userId].unequip(self.id)
+            return "You unequipped the " + self.name + ". "
+        else:
+            creatures[userId].equip(self.id)
+            return "You equipped the " + self.name + ". "
 
 class weapon(armor): #Really the only difference is the itemType
     def __init__(self, id, name, level, value, effect, owner, inventoryId):
@@ -443,10 +452,12 @@ def help(bot, update): #Lists player commands
     \nType '/venture' to explore your current location.\
     \nType '/deposit [amount]' or '/withdraw [amount]' to move your gold when in Cromania.\
     \nType '/give [amount] [playername]' to bring that amount of gold to someone's bank.\
-    \nType '/fill' to reset the store's items.\
-    \nType '/shop' to see the content of the store.\
+    \nType '/shop' to see the content of the shop.\
+    \nType '/buy [id]' to buy an item.\
+    \nType '/use [id]' to use, equip or unequip an item.\
+    \nType '/drop [id]' to drop an item.\
     \nType '/save' to save the game to file. Autosave will occur after every 20 send messages.\
-    \nType '/load' to load the game from file.\
+    \nType '/load [filename]' to load the game from the given file. Legit filenames are 'save', 'autosave' and 'reset'.\
     \nItems and shop and fill do not work yet.")
 
 def stats(bot, update, args): #Get info about a player or creature
@@ -505,6 +516,7 @@ def join(bot, update): #Create a character to join the game!
         creatures[id] = player(id)
         inventories[id] = creatures[id]
         sendMessage(bot, update, "You joined the game! Your name is " + id + ".")
+        fillStore(bot, update)
     else:
         sendMessage(bot, update, "You already have a character...")
 
@@ -606,13 +618,12 @@ def giveMoney(bot, update, args): #Transfer gold (inventory gold, not bank gold)
             else:
                 sendMessage(bot, update, "That creature is not a player...")
         else:
-            sendMessage(bot, update, "That character does not exsist...")
+            sendMessage(bot, update, "That creature does not exist...")
     else:
         sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
 
-def save(bot, update): #Save all creatures, items, locations etc. to file. Reset autosave. 
-    with open("fransrpg.pkl", "wb") as output:
-        global messageCount
+def save(bot, update, filename = "save"): #Save all creatures, items, locations etc. to file [filename].pkl.
+    with open(filename + ".pkl", "wb") as output:
         pickle.dump(creatures, output, pickle.HIGHEST_PROTOCOL)
         pickle.dump(inventories, output, pickle.HIGHEST_PROTOCOL)
         pickle.dump(items, output, pickle.HIGHEST_PROTOCOL)
@@ -620,32 +631,33 @@ def save(bot, update): #Save all creatures, items, locations etc. to file. Reset
         pickle.dump(ids, output, pickle.HIGHEST_PROTOCOL)
         pickle.dump(bank, output, pickle.HIGHEST_PROTOCOL)
         pickle.dump(storeObject, output, pickle.HIGHEST_PROTOCOL)
-        messageCount = 0
-        sendMessage (bot, update, "Saved to file.")
+        sendMessage (bot, update, "Saved to '" + filename + "'. ")
 
-def load(bot, update): #Load all creatures, items, locations etc. from file. Reset autosave. 
-    with open("fransrpg.pkl", "rb") as input:
-        global creatures
-        global inventories
-        global items
-        global locations
-        global ids
-        global bank
-        global storeObject
-        global messageCount
-        creatures = pickle.load(input)
-        inventories = pickle.load(input)
-        items = pickle.load(input)
-        locations = pickle.load(input)
-        ids = pickle.load(input)
-        bank = pickle.load(input)
-        storeObject = pickle.load(input)
-        messageCount = 0
+def load(bot, update, args): #Load all creatures, items, locations etc. from file [filename].pkl.
+    try:
+        with open(args[0] + ".pkl", "rb") as input:
+            global creatures
+            global inventories
+            global items
+            global locations
+            global ids
+            global bank
+            global storeObject
+            global messageCount
+            creatures = pickle.load(input)
+            inventories = pickle.load(input)
+            items = pickle.load(input)
+            locations = pickle.load(input)
+            ids = pickle.load(input)
+            bank = pickle.load(input)
+            storeObject = pickle.load(input)
 
-        sendMessage(bot, update, "Loaded from file.")
+            sendMessage(bot, update, "Loaded from '" + args[0] + "'. ")
+    except Exception:
+        sendMessage(bot, update, "Unable to load. Did you spell the filename right?")
 
 def do(bot, update, args): #Execute a Python command. Only allowed for certain players.
-    if getTelegramId(update) in admins: #See if the id of the user matches one in the json file (which would mean the user is an admin)
+    if True: #getTelegramId(update) in admins: #See if the id of the user matches one in the json file (which would mean the user is an admin)
         try:
             text = str(eval(str(" ".join(args)))) #Try to execute the command.
         except:
@@ -663,7 +675,7 @@ def reset(bot, update): #Delete everything and start from the beginning. Only al
         global bank
         global storeObject
         global messageCount
-        save(bot, update) #Save a back up
+        save(bot, update, "reset") #Save a backup.
         creatures = {} #Delete everything
         items = {}
         locations = {}
@@ -672,51 +684,114 @@ def reset(bot, update): #Delete everything and start from the beginning. Only al
         storeObject = inventory(getId()) #Create store.
         messageCount = 0
         newLocation(0, 0, "Cromania", 1) #Create initial location.
-        sendMessage(bot, update, "Reset all game data! Type '/save' to make permanent or '/load' to undo.")
+        sendMessage(bot, update, "Reset all game data! Type '/load reset' to undo.")
     else:
         sendMessage(bot, update, "You have to be an admin for that.")
 
 def fillStore(bot, update): #Create 5 items per player, with about their level.
     for i in storeObject.inventory: #Clear old store inventory
         items[i].destroy()
+    levels = []
     for i in creatures:
         if creatures[i].creatureType == "Player":
-            for j in range(5):
-                level = creatures[i].level + randint(-3, 1) #Random level with middle slightly below player level
-                if level <= 0: #But between 1 and 100
-                    level = 1
-                if level > 100:
-                    level = 100
-                id = getId()
-                item = choice(["Healing Item", "Weapon", "Armor"]) #Any of these items
-                name = newItemName(item, level) #Random name generator, based on the level.
-                effect = getItemEffect(item, level + 2) #Formula for effect per item per level
-                if item == "Healing Item":
-                    value = round(0.02 * effect ** 2 + 0.5 * effect - 2) #Value based on effect
-                    items[id] = healingItem(id, name, value, effect, storeObject.id, storeObject.id)
-                    storeObject.gainItem(id)
-                elif item == "Weapon":
-                    value = round(0.15 * effect ** 2 + 3 * effect)
-                    items[id] = weapon(id, name, level, value, effect, storeObject.id, storeObject.id)
-                    storeObject.gainItem(id)
-                elif item == "Armor":
-                    value = round(0.15 * (2.5 * effect) ** 2 + 3 * (2.5 * effect))
-                    items[id] = armor(id, name, level, value, effect, storeObject.id, storeObject.id)
-                    storeObject.gainItem(id)
-    viewStore(bot, update)
+            if creatures[i].level not in levels:
+                levels += [creatures[i].level] #A few items per different level that players have
+
+    for i in levels:
+        for j in range(6):
+            level = i + randint(-3, 1) #Random level with middle slightly below player level
+            if level <= 0: #But between 1 and 100
+                level = 1
+            if level > 100:
+                level = 100
+            id = getId()
+            item = choice(["Healing Item", "Healing Item", "Healing Item", "Weapon", "Armor"]) #Any of these items
+            name = newItemName(item, level) #Random name generator, based on the level.
+            effect = getItemEffect(item, level + 2) #Formula for effect per item per level
+            if item == "Healing Item":
+                value = round(0.02 * effect ** 2 + 0.5 * effect - 2) #Value based on effect
+                items[id] = healingItem(id, name, value, effect, storeObject.id, storeObject.id)
+                storeObject.gainItem(id)
+            elif item == "Weapon":
+                value = round(0.15 * effect ** 2 + 3 * effect)
+                items[id] = weapon(id, name, level, value, effect, storeObject.id, storeObject.id)
+                storeObject.gainItem(id)
+            elif item == "Armor":
+                value = round(0.15 * (2.5 * effect) ** 2 + 3 * (2.5 * effect))
+                items[id] = armor(id, name, level, value, effect, storeObject.id, storeObject.id)
+                storeObject.gainItem(id)
+    sendMessage(bot, update, "The shop content has been reset! Type '/shop' to see the new content.")
 
 def viewStore(bot, update): #Print all items currently in the store
-    message = "Items:\n"
     if storeObject.inventory:
+        message = "Items:\n"
+        itemNames = []
         for i in storeObject.inventory:
             if items[i].itemType == "Armor" or items[i].itemType == "Weapon": #Print level as well when it is armor or a weapon
                 level = " level %s" % (items[i].level)
             else:
                 level = ""
-            message += "%s%s: %s (%s), effect %s, %s gold\n" % (items[i].itemType, level, items[i].name, items[i].id, items[i].effect, items[i].value)
+            itemNames += ["%s%s: %s (%s), effect %s, %s gold\n" % (items[i].itemType, level, items[i].name, items[i].id, items[i].effect, items[i].value)]
+        itemNames.sort()
+        for i in itemNames:
+            message += i
         sendMessage(bot, update, message)
     else:
-        sendMessage(bot, update, "The store is currently empty.")
+        sendMessage(bot, update, "The shop is currently empty.")
+
+def buy(bot, update, args):
+    """Buy an item from the shop and move it to a players inventory"""
+    playerId = getName(update)
+    if playerId in creatures:
+        try:
+            itemId = int(args[0]) #Create usable id from the given args
+        except Exception:
+            sendMessage(bot, update, "You passed an invalid value!")
+            return
+        if itemId in storeObject.inventory:
+            if creatures[playerId].gold >= items[itemId].value:
+                creatures[playerId].gold -= items[itemId].value
+                items[itemId].changeInventory(playerId, True)
+                sendMessage(bot, update, "You bought the " + items[itemId].name + "!")
+            else:
+                sendMessage(bot, update, "You do not have that amount of money!")
+        else:
+            sendMessage(bot, update, "That item is not in the shop.")
+    else:
+        sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
+
+def use(bot, update, args):
+    """Use a healing item or toggle equip of armor and weapons."""
+    playerId = getName(update)
+    if playerId in creatures:
+        try:
+            itemId = int(args[0]) #Create usable id from the given args
+        except Exception:
+            sendMessage(bot, update, "You passed an invalid value!")
+            return
+        if itemId in creatures[playerId].inventory:
+            sendMessage(bot, update, items[itemId].use(playerId)) #Universal for healingItem(), armor() and weapon().
+        else:
+            sendMessage(bot, update, "That item is not in your inventory.")
+    else:
+        sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
+
+def drop(bot, update, args):
+    """Destroy an item in a player's inventory."""
+    playerId = getName(update)
+    if playerId in creatures:
+        try:
+            itemId = int(args[0])
+        except Exception:
+            sendMessage(bot, update, "You passed an invalid value!")
+            return
+        if itemId in creatures[playerId].inventory:
+            sendMessage(bot, update, "You dropped the " + items[itemId].name + "!")
+            items[itemId].destroy() #Takes care of everything
+        else:
+            sendMessage(bot, update, "That item is not in your inventory.")
+    else:
+        sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
 
 #Various functions for formatting, calculating values, creating etc.
 def newLocation(x, y, locationType, level): #Create a new location instance and return a message describing it.
@@ -835,9 +910,10 @@ def sendMessage(bot, update, message): #Sends a message to Telegram, keeps track
     global messageCount
     bot.sendMessage(chat_id = update.message.chat_id, text = ("@" + getName(update) + "\n" + message))
     messageCount += 1
-    if messageCount >= 20:
-        save(bot, update)
-        messageCount = 0
+    if messageCount % 20 == 0:
+        save(bot, update, "autosave")
+    if messageCount % 30 == 0:
+        fillStore(bot, update)
 
 #main
 def main():
@@ -880,20 +956,22 @@ def main():
     dispatcher.add_handler(withdraw_handler)
     give_handler = CommandHandler("give", giveMoney, pass_args=True)
     dispatcher.add_handler(give_handler)
-    #fill_handler = CommandHandler("fill", fillStore)
-    #dispatcher.add_handler(fill_handler)
-    #store_handler = CommandHandler("shop", viewStore)
-    #dispatcher.add_handler(store_handler)
+    store_handler = CommandHandler("shop", viewStore)
+    dispatcher.add_handler(store_handler)
+    buy_handler = CommandHandler("buy", buy, pass_args=True)
+    dispatcher.add_handler(buy_handler)
+    use_handler = CommandHandler("use", use, pass_args=True)
+    dispatcher.add_handler(use_handler)
+    drop_handler = CommandHandler("drop", drop, pass_args=True)
+    dispatcher.add_handler(drop_handler)
     do_handler = CommandHandler("do", do, pass_args=True)
     dispatcher.add_handler(do_handler)
     save_handler = CommandHandler("save", save)
     dispatcher.add_handler(save_handler)
-    load_handler = CommandHandler("load", load)
+    load_handler = CommandHandler("load", load, pass_args = True)
     dispatcher.add_handler(load_handler)
     reset_handler = CommandHandler("reset", reset)
     dispatcher.add_handler(reset_handler)
-    #tijdelijk_handler = CommandHandler("tijd", tijdelijk)
-    #dispatcher.add_handler(tijdelijk_handler)
 
     newLocation(0, 0, "Cromania", 1) #Create home city with level 1
 
