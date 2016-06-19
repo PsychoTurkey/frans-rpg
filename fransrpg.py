@@ -657,7 +657,7 @@ def load(bot, update, args): #Load all creatures, items, locations etc. from fil
         sendMessage(bot, update, "Unable to load. Did you spell the filename right?")
 
 def do(bot, update, args): #Execute a Python command. Only allowed for certain players.
-    if True: #getTelegramId(update) in admins: #See if the id of the user matches one in the json file (which would mean the user is an admin)
+    if getTelegramId(update) in admins: #See if the id of the user matches one in the json file (which would mean the user is an admin)
         try:
             text = str(eval(str(" ".join(args)))) #Try to execute the command.
         except:
@@ -928,7 +928,7 @@ def main():
 
     token = configfile["token"] #Load the token from the json file.
     updater = Updater(token = token) #Something important for the Telegram interface. argv[1] should be the bot token
-
+a
     dispatcher = updater.dispatcher #The same
 
     #Commands accessable by players:
