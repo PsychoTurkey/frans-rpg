@@ -14,3 +14,4 @@ Things that really should be changed:
 - Loan function: get an amount of money (to your inventory gold), but all money you store in bank will be taken untill the loan has been repaid.
 - I don't recall ever seeing one of the last words of items adjectives and names. The algorithm should be checked and tested.
 - Have a toggleable pvp setting
+- Make it comply to PEP8 standards
