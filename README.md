@@ -12,3 +12,5 @@ Things that really should be changed:
 - Make it comply to PEP8 standards
 - Reference player case insensitive
 - Deposit() return message should have a capital D
+- Have players start with a weapon equipped, so that unarmed actually means no damage
+- Maybe change every "id" to "targetId", "playerId", "creatueId" etc.
