@@ -208,7 +208,8 @@ class inventory: #A class that can manage items. Used for shop and players.
 
     def dropItem(self, itemId):
         if itemId in self.inventory:
-            self.inventory.pop(self.inventory.index(itemId))
+            popped = self.inventory.pop(self.inventory.index(itemId))
+            print("deleting", popped, itemId, sep=":")
 
     def viewInventory(self):
         """Return nice format of every item in given inventory"""
@@ -418,6 +419,7 @@ class item: #Parent class for healing items, gear.
             self.ownerId = newId
 
     def destroy(self): #Delete the item, remove it from an inventory
+        print("destroy: ", self.id, ":", self.inventoryId)
         ids[self.id] = True
         inventories[self.inventoryId].dropItem(self.id)
         del items[self.id]
@@ -709,7 +711,7 @@ def viewStore(bot, update):
     if creatures[id].x != 0 or creatures[id].y != 0: #Only allowed in Cromania
         sendMessage(bot, update, "You have to be in Cromania to do that.")
         return
-    content = invetories("storeObjectId").viewInventory()
+    content = inventories["storeObjectId"].viewInventory()
     if content:
         sendMessage(bot, update, content)
     else:
@@ -727,7 +729,7 @@ def buy(bot, update, args):
         except Exception:
             sendMessage(bot, update, "You passed an invalid value!")
             return
-        if itemId in invetories("storeObjectId").inventory:
+        if itemId in inventories["storeObjectId"].inventory:
             if creatures[playerId].gold >= items[itemId].value:
                 creatures[playerId].gold -= items[itemId].value
                 items[itemId].changeInventory(playerId, True)
@@ -828,7 +830,12 @@ def newItemName(type, level): #Generates an item name. Number of adjectives base
     return name
 
 def fillStore(bot, update): #Create 5 items per player, with about their level.
-    for i in storeinvetories("storeObjectId").inventory: #Clear old store inventory
+    print(inventories["storeObjectId"].inventory)
+    # inventory list gets smaller when deleting items and the for loop gets confused:
+    # use temporary list instead.
+    tempInv = [i for i in inventories["storeObjectId"].inventory]
+    for i in tempInv: #Clear old store inventory
+        print(i)
         items[i].destroy()
     levels = []
     for i in creatures:
