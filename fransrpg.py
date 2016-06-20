@@ -155,6 +155,7 @@ items = {}  # Items dictionary {id : object}
 
 class location:
     def __init__(self, x, y, locationType, level):
+        """location(x, y, locationType, level)"""
         # Locations dict coordinates
         self.x = x
         self.y = y
@@ -202,6 +203,7 @@ Difficulty: {}""".format(self.locationType, coordsFormat(self.x, self.y), getRat
 
 class creature:
     def __init__(self, x, y, id, creatureType, level):
+        """creature(x, y, id, creatureType, level)"""
         # Initial location
         self.x = x
         self.y = y
@@ -353,6 +355,7 @@ Coordinates: {}""".format(
 class inventory:
     """A class that can manage items. Used for shop and players."""
     def __init__(self, id):
+        """inventory(id)"""
         self.id = id
         # Holds the item ids
         self.inventory = []
@@ -389,6 +392,7 @@ class inventory:
 class player(creature, inventory):
     # Todo: sepparate ids and names
     def __init__(self, id):
+        """player(id)"""
         # Starts in Cromania
         self.x = 0
         self.y = 0
@@ -624,16 +628,25 @@ Deaths: {}""".format(
                 creatures[choice(locations[self.x][self.y].population)].attack(self.id)[0]
             )
 
-    def equip(self, itemId):
+    def equip(self, itemId, effect):
         """Equip an item and adjust stats."""
+        if itemId in self.equipped:
+            self.equipped[self.equipped.index(itemId)] = -1
+            itemtype = items[itemId].itemType
+            if itemtype == "Armor":
+                self.armor = 0
+            elif itemtype == "Weapon":
+                self.damage = noWeaponDamage
+            return "You unequipped {}.".format(items[itemId].name)
+
         if items[itemId].level <= self.level:
             if items[itemId].itemType == "Weapon":
                 self.equipped[0] = itemId
-                self.damage = items[itemId].effect
+                self.damage = effect
                 return "You are now using {}!".format(items[itemId].name)
             elif items[itemId].itemType == "Armor":
                 self.equipped[1] = itemId
-                self.armor = items[itemId].effect
+                self.armor = effect
                 return "You are now wearing {}!".format(items[itemId].name)
         else:
             # Items have level caps
@@ -654,6 +667,7 @@ Deaths: {}""".format(
 class item:
     """Parent class for healing items, gear."""
     def __init__(self, id, name, itemType, value, ownerId, inventoryId):
+        """item(id, name, itemType, value, ownerId, inventoryId)"""
         # Uses same id system as NPCs
         self.id = id
         self.name = name
@@ -688,6 +702,7 @@ class item:
 class healingItem(item):
     """Use to regenerate health."""
     def __init__(self, id, name, value, effect, ownerId, inventoryId):
+        """healinItem(id, name, value, effect, ownerId, inventoryId)"""
         item.__init__(self, id, name, "Healing Item", value, ownerId, inventoryId)
         # The parentclass item doesn't have effect because future items may not need it.
         self.effect = effect
@@ -702,6 +717,7 @@ class healingItem(item):
 
 class armor(item):
     def __init__(self, id, name, level, value, effect, ownerId, inventoryId):
+        """armor(id, name, level, value, effect, ownerId, inventoryId)"""
         item.__init__(self, id, name, "Armor", value, ownerId, inventoryId)
         # Minimum required level to equip this item
         self.level = level
@@ -721,6 +737,7 @@ class armor(item):
 class weapon(armor):
     """Really the only difference is the itemType"""
     def __init__(self, id, name, level, value, effect, ownerId, inventoryId):
+        """weapon(id, name, level, value, effect, ownerId, inventoryId)"""
         item.__init__(self, id, name, "Weapon", value, ownerId, inventoryId)
         self.level = level
         self.effect = effect
@@ -1082,8 +1099,11 @@ def use(bot, update, args):
             sendMessage(bot, update, "You passed an invalid value!")
             return
         if itemId in creatures[playerId].inventory:
-            # Universal for healingItem(), armor() and weapon().
-            sendMessage(bot, update, items[itemId].use(playerId))
+            if items[itemId].name == "Healing Item":
+                # Universal for healingItem(), armor() and weapon().
+                sendMessage(bot, update, items[itemId].use(playerId))
+            else:
+                sendMessage(bot, update, creatures[playerId].equip(itemId, items[itemId].effect))
         else:
             sendMessage(bot, update, "That item is not in your inventory.")
     else:
@@ -1332,7 +1352,7 @@ def sendMessage(bot, update, message):
 
 def main():
     # The store, with items for purchase. The ID needs to be universal through saves.
-    inventories["storeObjectId"]= inventory("storeObjectId")
+    inventories["storeObjectId"] = inventory("storeObjectId")
     global admins
     # Try to load admin ids and bot token
     configfile = json.load(open(argv[1]))
