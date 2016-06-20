@@ -337,6 +337,7 @@ class creature:
     def stats(self):
         """Print the creature's stats."""
         return """Name: {}
+Id: {}
 Level: {}
 Hp: {}/{}
 Damage: {}
