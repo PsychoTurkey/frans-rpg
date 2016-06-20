@@ -364,8 +364,7 @@ class inventory:
 
     def dropItem(self, itemId):
         if itemId in self.inventory:
-            popped = self.inventory.pop(self.inventory.index(itemId))
-            print("deleting", popped, itemId, sep=":")
+            self.inventory.pop(self.inventory.index(itemId))
 
     def viewInventory(self):
         """Return nice format of every item in given inventory"""
@@ -960,8 +959,7 @@ def giveMoney(bot, update, args):
 
 def save(bot, update, filename = "save"):
     """Save all creatures, items, locations etc. to file [filename].pkl."""
-    with open(filename = ".pkl", "wb") as output:
-        global messageCount
+    with open(filename + ".pkl", "wb") as output:
         pickle.dump(creatures, output, pickle.HIGHEST_PROTOCOL)
         pickle.dump(inventories, output, pickle.HIGHEST_PROTOCOL)
         pickle.dump(items, output, pickle.HIGHEST_PROTOCOL)
@@ -981,7 +979,6 @@ def load(bot, update, args):
             global locations
             global ids
             global bank
-            global messageCount
             creatures = pickle.load(input)
             inventories = pickle.load(input)
             items = pickle.load(input)
@@ -1012,6 +1009,7 @@ def reset(bot, update):
     """Delete everything and start from the beginning. Only allowed for certain players."""
     if getTelegramId(update) in admins:
         global creatures
+        global inventories
         global items
         global locations
         global ids
@@ -1021,6 +1019,7 @@ def reset(bot, update):
         save(bot, update, "reset")
         # Delete everything
         creatures = {}
+        inventories = {}
         items = {}
         locations = {}
         bank = {}
@@ -1064,7 +1063,7 @@ def buy(bot, update, args):
             if creatures[playerId].gold >= items[itemId].value:
                 creatures[playerId].gold -= items[itemId].value
                 items[itemId].changeInventory(playerId, True)
-                sendMessage(bot, update, "You bought the {}!".format(items[itemId].name)
+                sendMessage(bot, update, "You bought the {}!".format(items[itemId].name))
             else:
                 sendMessage(bot, update, "You do not have that amount of money!")
         else:
@@ -1177,33 +1176,40 @@ the higher in the lists."""
     name += choice(itemsNouns[itemLower:itemUpper])
     return name
 
-def fillStore(bot, update): #Create 5 items per player, with about their level.
-    print(inventories["storeObjectId"].inventory)
+def fillStore(bot, update):
+    """Create 5 items per player, with about their level."""
     # inventory list gets smaller when deleting items and the for loop gets confused:
-    # use temporary list instead.
+    # Use temporary list instead.
     tempInv = [i for i in inventories["storeObjectId"].inventory]
-    for i in tempInv: #Clear old store inventory
-        print(i)
+    # Clear old store inventory
+    for i in tempInv:
         items[i].destroy()
     levels = []
     for i in creatures:
         if creatures[i].creatureType == "Player":
             if creatures[i].level not in levels:
-                levels += [creatures[i].level] #A few items per different level that players have
+                # A few items per different level that players have
+                levels += [creatures[i].level]
 
     for i in levels:
         for j in range(6):
-            level = i + randint(-3, 1) #Random level with middle slightly below player level
-            if level <= 0: #But between 1 and 100
+            # Random level with middle slightly below player level
+            level = i + randint(-3, 1)
+            # But between 1 and 100
+            if level <= 0:
                 level = 1
             if level > 100:
                 level = 100
             id = getId()
-            item = choice(["Healing Item", "Healing Item", "Healing Item", "Weapon", "Armor"]) #Any of these items
-            name = newItemName(item, level) #Random name generator, based on the level.
-            effect = getItemEffect(item, level + 2) #Formula for effect per item per level
+            # Any of these items
+            item = choice(["Healing Item", "Healing Item", "Healing Item", "Weapon", "Armor"])
+            # Random name generator, based on the level.
+            name = newItemName(item, level)
+            # Formula for effect per item per level
+            effect = getItemEffect(item, level + 2)
             if item == "Healing Item":
-                value = round(0.02 * effect ** 2 + 0.5 * effect - 2) #Value based on effect
+                # Value based on effect
+                value = round(0.02 * effect ** 2 + 0.5 * effect - 2)
                 items[id] = healingItem(id, name, value, effect, "storeObjectId", "storeObjectId")
                 inventories["storeObjectId"].gainItem(id)
             elif item == "Weapon":
@@ -1314,7 +1320,7 @@ def getId():
 def sendMessage(bot, update, message):
     """Sends a message to Telegram, keeps track of autosave, adresses user."""
     global messageCount
-    bot.sendMessage(chat_id=update.message.chat_id, text=("@{}\n{}".format(getName(update), message))
+    bot.sendMessage(chat_id=update.message.chat_id, text=("@{}\n{}".format(getName(update), message)))
     messageCount += 1
     if messageCount % 20 == 0:
         save(bot, update, "autosave")
