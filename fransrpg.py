@@ -127,7 +127,7 @@ armorItemsAdj = [
 ]
 
 # Players can't do anything if they can't fight. Useful when testing.
-noWeaponDamage = 5
+noWeaponDamage = 1
 # Change for testing purposes: new characters start at this level.
 initialLevel = 1
 # Gold in the player's inventory when they create a character. Bank already has 10.
@@ -1045,6 +1045,7 @@ def reset(bot, update):
         messageCount = 0
         # Create initial location.
         newLocation(0, 0, "Cromania", 1)
+        inventories["storeObjectId"] = inventory("storeObjectId")
         sendMessage(bot, update, "Reset all game data! Type '/load reset' to undo.")
     else:
         sendMessage(bot, update, "You have to be an admin for that.")
@@ -1099,7 +1100,7 @@ def use(bot, update, args):
             sendMessage(bot, update, "You passed an invalid value!")
             return
         if itemId in creatures[playerId].inventory:
-            if items[itemId].name == "Healing Item":
+            if items[itemId].itemType == "Healing Item":
                 # Universal for healingItem(), armor() and weapon().
                 sendMessage(bot, update, items[itemId].use(playerId))
             else:
