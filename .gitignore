@@ -64,4 +64,4 @@ target/
 *.pkl
 *.json
 *.swp
-
+*.cfg

@@ -154,6 +154,7 @@ items = {}  # Items dictionary {id : object}
 
 
 class location:
+
     def __init__(self, x, y, locationType, level):
         """location(x, y, locationType, level)"""
         # Locations dict coordinates
@@ -186,9 +187,11 @@ class location:
 
     def info(self):
         """Display its own stats"""
-        message = """Terrain: {}
-Coordinates: {}
-Difficulty: {}""".format(self.locationType, coordsFormat(self.x, self.y), getRating(self.level))
+        message = "\n".join(line.lstrip() for line in "Terrain: {}\n\
+        Coordinates: {}\n\
+        Difficulty: {}".format(
+            self.locationType, coordsFormat(self.x, self.y), getRating(self.level)
+        ).split("\n"))
         # players and npc in the location:
         if bool(self.population):
             message += "\nCreatures: "
@@ -202,6 +205,7 @@ Difficulty: {}""".format(self.locationType, coordsFormat(self.x, self.y), getRat
 
 
 class creature:
+
     def __init__(self, x, y, id, creatureType, level):
         """creature(x, y, id, creatureType, level)"""
         # Initial location
@@ -272,7 +276,7 @@ class creature:
 
             # Ignore if the damage isn't greater than the target's armor.
             if self.damage > target.armor:
-                min = round((self.damage - target.armor)/2)
+                min = round((self.damage - target.armor) / 2)
                 if min == 0:
                     # At least one damage point.
                     min = 1
@@ -306,7 +310,7 @@ class creature:
             fightBack = True
             target = creatures[targetId]
             if self.damage > target.armor:
-                min = round((self.damage - target.armor)/2)
+                min = round((self.damage - target.armor) / 2)
                 if min == 0:
                     min = 1
 
@@ -340,20 +344,21 @@ class creature:
 
     def stats(self):
         """Print the creature's stats."""
-        return """Name: {}
-Id: {}
-Level: {}
-Hp: {}/{}
-Damage: {}
-Armor: {}
-Coordinates: {}""".format(
-            self.name, self.id, self.level, self.hp, self.maxHp, self.damage, self.armor,
-            coordsFormat(self.x, self.y)
-        )
+        return "\n".join(line.lstrip() for line in "Name: {}\n\
+    Id: {}\n\
+    Level: {}\n\
+    Hp: {}/{}\n\
+    Damage: {}\n\
+    Armor: {}\n\
+    Coordinates: {}".format(
+                self.name, self.id, self.level, self.hp, self.maxHp, self.damage,
+                self.armor, coordsFormat(self.x, self.y)
+            ).strip("\n"))
 
 
 class inventory:
     """A class that can manage items. Used for shop and players."""
+
     def __init__(self, id):
         """inventory(id)"""
         self.id = id
@@ -375,11 +380,15 @@ class inventory:
             message = ""
             itemNames = []
             for i in self.inventory:
-                if items[i].itemType == "Armor" or items[i].itemType == "Weapon": #Print level as well when it is armor or a weapon
+                # Print level as well when it is armor or a weapon
+                if items[i].itemType == "Armor" or items[i].itemType == "Weapon":
                     level = " level %s" % (items[i].level)
                 else:
                     level = ""
-                itemNames += ["%s%s: %s (%s), effect %s, value %s.\n" % (items[i].itemType, level, items[i].name, items[i].id, items[i].effect, items[i].value)]
+                itemNames += ["{}{}: {} ({}), effect {}, value {}.\n".format(
+                    items[i].itemType, level, items[i].name,
+                    items[i].id, items[i].effect, items[i].value
+                )]
             itemNames.sort()
             for i in itemNames:
                 message += i
@@ -388,9 +397,9 @@ class inventory:
             return None
 
 
-
 class player(creature, inventory):
     # Todo: sepparate ids and names
+
     def __init__(self, id):
         """player(id)"""
         # Starts in Cromania
@@ -564,23 +573,23 @@ class player(creature, inventory):
 
     def stats(self):
         """All the player's stats"""
-        return """Id: {}
-Level: {}
-Xp: {}/{}
-Hp: {}/{}
-Damage: {}
-Armor: {}
-Gold: {}
-Bank: {}
-Coordinates: {}
-Player kills: {}
-NPC kills: {}
-Deaths: {}""".format(
-            self.name, self.level, self.xp, getLevelXp(self.level),
-            self.hp, self.maxHp, self.damage, self.armor, self.gold,
-            bank[self.id], coordsFormat(self.x, self.y),
-            self.playerKills, self.kills, self.deaths
-        )
+        return "\n".join(line.lstrip() for line in "Id: {}\n\
+    Level: {}\n\
+    Xp: {}/{}\n\
+    Hp: {}/{}\n\
+    Damage: {}\n\
+    Armor: {}\n\
+    Gold: {}\n\
+    Bank: {}\n\
+    Coordinates: {}\n\
+    Player kills: {}\n\
+    NPC kills: {}\n\
+    Deaths: {}".format(
+                self.name, self.level, self.xp, getLevelXp(self.level),
+                self.hp, self.maxHp, self.damage, self.armor, self.gold,
+                bank[self.id], coordsFormat(self.x, self.y),
+                self.playerKills, self.kills, self.deaths
+            ).split("\n"))
 
     def venture(self):
         """When venturing, something happens within the location."""
@@ -666,6 +675,7 @@ Deaths: {}""".format(
 
 class item:
     """Parent class for healing items, gear."""
+
     def __init__(self, id, name, itemType, value, ownerId, inventoryId):
         """item(id, name, itemType, value, ownerId, inventoryId)"""
         # Uses same id system as NPCs
@@ -680,8 +690,9 @@ class item:
         # Inventory it's in.
         self.inventoryId = inventoryId
 
-    def changeInventory(self, newId, newOwner = False):
-        """Changes the inventory the item is in to newId, and if newOwner is True change the owner as well."""
+    def changeInventory(self, newId, newOwner=False):
+        """Changes the inventory the item is in to newId,
+        and if newOwner is True change the owner as well."""
         inventories[self.inventoryId].dropItem(self.id)
         self.inventoryId = newId
         inventories[self.inventoryId].gainItem(self.id)
@@ -701,6 +712,7 @@ class item:
 
 class healingItem(item):
     """Use to regenerate health."""
+
     def __init__(self, id, name, value, effect, ownerId, inventoryId):
         """healinItem(id, name, value, effect, ownerId, inventoryId)"""
         item.__init__(self, id, name, "Healing Item", value, ownerId, inventoryId)
@@ -716,8 +728,9 @@ class healingItem(item):
 
 
 class armor(item):
+    """armor(id, name, level, value, effect, ownerId, inventoryId)"""
+
     def __init__(self, id, name, level, value, effect, ownerId, inventoryId):
-        """armor(id, name, level, value, effect, ownerId, inventoryId)"""
         item.__init__(self, id, name, "Armor", value, ownerId, inventoryId)
         # Minimum required level to equip this item
         self.level = level
@@ -736,6 +749,7 @@ class armor(item):
 
 class weapon(armor):
     """Really the only difference is the itemType"""
+
     def __init__(self, id, name, level, value, effect, ownerId, inventoryId):
         """weapon(id, name, level, value, effect, ownerId, inventoryId)"""
         item.__init__(self, id, name, "Weapon", value, ownerId, inventoryId)
@@ -754,25 +768,27 @@ def start(bot, update):
 
 def help(bot, update):
     """Lists player commands"""
-    message = """Type '/help' for this message.
-Type '/start' to see the welcome message.
-Type '/stats [id]' to see that creature's stats.  Player id's are their names. Enter no id for your own stats.
-Type '/location [id]' to get info about that creature's current location.
-Type '/players' to see all players and their locations.
-Type '/join' to create a character.
-Type '/attack [id]' to attack the creature with that id.
-Type '/move [direction] [multiplier]' to move in any of directions n, ne, e, se, s, sw, w or nw. Multiplier is limited to your level.
-Type '/venture' to explore your current location.
-Type '/deposit [amount]' or '/withdraw [amount]' to move your gold when in Cromania.
-Type '/give [amount] [playername]' to bring that amount of gold to someone's bank.
-Type '/shop' to see the content of the shop.
-Type '/inventory' to see the items in your inventory.
-Type '/buy [id]' to buy an item.
-Type '/use [id]' to use, equip or unequip an item.
-Type '/drop [id]' to drop an item.
-Type '/save' to save the game to file. Autosave will occur after every 20 send messages.
-Type '/load [filename]' to load the game from the given file. Legit filenames are 'save', 'autosave' and 'reset'.
-Items and shop and fill do not work yet."""
+    message = "Type '/help' for this message.\n\
+    Type '/start' to see the welcome message.\n\
+    Type '/stats [id]' to see that creature's stats.  Player id's are their names. Enter no id for your own stats.\n\
+    Type '/location [id]' to get info about that creature's current location.\n\
+    Type '/players' to see all players and their locations.\n\
+    Type '/join' to create a character.\n\
+    Type '/attack [id]' to attack the creature with that id.\n\
+    Type '/move [direction] [multiplier]' to move in any of directions n, ne, e, se, s, sw, w or nw. Multiplier is limited to your level.\n\
+    Type '/venture' to explore your current location.\n\
+    Type '/deposit [amount]' or '/withdraw [amount]' to move your gold when in Cromania.\n\
+    Type '/give [amount] [playername]' to bring that amount of gold to someone's bank.\n\
+    Type '/shop' to see the content of the shop.\n\
+    Type '/inventory' to see the items in your inventory.\n\
+    Type '/buy [id]' to buy an item.\n\
+    Type '/use [id]' to use, equip or unequip an item.\n\
+    Type '/drop [id]' to drop an item.\n\
+    Type '/save' to save the game to file. Autosave will occur after every 20 send messages.\n\
+    Type '/load [filename]' to load the game from the given file. Legit filenames are 'save',\n\
+    'autosave' and 'reset'.\n\
+    Items and shop and fill do not work yet."
+    message = "\n".join(line.lstrip for line in message.split("\n"))
     sendMessage(bot, update, message)
 
 
@@ -974,7 +990,7 @@ def giveMoney(bot, update, args):
         sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
 
 
-def save(bot, update, filename = "save"):
+def save(bot, update, filename="save"):
     """Save all creatures, items, locations etc. to file [filename].pkl."""
     with open(filename + ".pkl", "wb") as output:
         pickle.dump(creatures, output, pickle.HIGHEST_PROTOCOL)
@@ -1050,6 +1066,7 @@ def reset(bot, update):
     else:
         sendMessage(bot, update, "You have to be an admin for that.")
 
+
 def viewStore(bot, update):
     """Lists all items in the shop"""
     id = getName(update)
@@ -1062,6 +1079,7 @@ def viewStore(bot, update):
         sendMessage(bot, update, content)
     else:
         sendMessage(bot, update, "The shop is currently empty!")
+
 
 def buy(bot, update, args):
     """Buy an item from the shop and move it to a players inventory"""
@@ -1089,6 +1107,7 @@ def buy(bot, update, args):
     else:
         sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
 
+
 def use(bot, update, args):
     """Use a healing item or toggle equip of armor and weapons."""
     playerId = getName(update)
@@ -1110,6 +1129,7 @@ def use(bot, update, args):
     else:
         sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
 
+
 def drop(bot, update, args):
     """Destroy an item in a player's inventory."""
     playerId = getName(update)
@@ -1127,6 +1147,7 @@ def drop(bot, update, args):
             sendMessage(bot, update, "That item is not in your inventory.")
     else:
         sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
+
 
 def viewPlayerInventory(bot, update):
     """List all items in the caller's inventory"""
@@ -1155,8 +1176,8 @@ def newLocation(x, y, locationType, level):
 
 def newItemName(type, level):
     """Generates an item name. Number of adjectives based on the level,
-and adjectives and names are chosen the higher the level,
-the higher in the lists."""
+    and adjectives and names are chosen the higher the level,
+    the higher in the lists."""
     # Choose list:
     if type == "Healing Item":
         itemsNouns = healingItems
@@ -1196,6 +1217,7 @@ the higher in the lists."""
         name += adj + " "
     name += choice(itemsNouns[itemLower:itemUpper])
     return name
+
 
 def fillStore(bot, update):
     """Create 5 items per player, with about their level."""
@@ -1241,7 +1263,9 @@ def fillStore(bot, update):
                 value = round(0.15 * (2.5 * effect) ** 2 + 3 * (2.5 * effect))
                 items[id] = armor(id, name, level, value, effect, "storeObjectId", "storeObjectId")
                 inventories["storeObjectId"].gainItem(id)
-    sendMessage(bot, update, "The shop content has been reset! Type '/shop' to see the new content.")
+    sendMessage(
+        bot, update, "The shop content has been reset! Type '/shop' to see the new content."
+    )
 
 
 def getReward(player, rating):
@@ -1282,7 +1306,7 @@ def coordsFormat(x, y):
 
 def getLevelXp(level):
     """Calculates xp needed for players to level up, per level."""
-    return round(level ** 1.1)+9
+    return round(level ** 1.1) + 9
 
 
 def getLevelHp(level):
@@ -1341,7 +1365,9 @@ def getId():
 def sendMessage(bot, update, message):
     """Sends a message to Telegram, keeps track of autosave, adresses user."""
     global messageCount
-    bot.sendMessage(chat_id=update.message.chat_id, text=("@{}\n{}".format(getName(update), message)))
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text=("@{}\n{}".format(getName(update), message))
+                    )
     messageCount += 1
     if messageCount % 20 == 0:
         save(bot, update, "autosave")
@@ -1409,7 +1435,7 @@ def main():
     dispatcher.add_handler(do_handler)
     save_handler = CommandHandler("save", save)
     dispatcher.add_handler(save_handler)
-    load_handler = CommandHandler("load", load, pass_args = True)
+    load_handler = CommandHandler("load", load, pass_args=True)
     dispatcher.add_handler(load_handler)
     reset_handler = CommandHandler("reset", reset)
     dispatcher.add_handler(reset_handler)
