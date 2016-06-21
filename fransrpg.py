@@ -154,6 +154,7 @@ items = {}  # Items dictionary {id : object}
 
 
 class location:
+
     def __init__(self, x, y, locationType, level):
         """location(x, y, locationType, level)"""
         # Locations dict coordinates
@@ -202,6 +203,7 @@ Difficulty: {}""".format(self.locationType, coordsFormat(self.x, self.y), getRat
 
 
 class creature:
+
     def __init__(self, x, y, id, creatureType, level):
         """creature(x, y, id, creatureType, level)"""
         # Initial location
@@ -272,7 +274,7 @@ class creature:
 
             # Ignore if the damage isn't greater than the target's armor.
             if self.damage > target.armor:
-                min = round((self.damage - target.armor)/2)
+                min = round((self.damage - target.armor) / 2)
                 if min == 0:
                     # At least one damage point.
                     min = 1
@@ -306,7 +308,7 @@ class creature:
             fightBack = True
             target = creatures[targetId]
             if self.damage > target.armor:
-                min = round((self.damage - target.armor)/2)
+                min = round((self.damage - target.armor) / 2)
                 if min == 0:
                     min = 1
 
@@ -354,6 +356,7 @@ Coordinates: {}""".format(
 
 class inventory:
     """A class that can manage items. Used for shop and players."""
+
     def __init__(self, id):
         """inventory(id)"""
         self.id = id
@@ -375,11 +378,15 @@ class inventory:
             message = ""
             itemNames = []
             for i in self.inventory:
-                if items[i].itemType == "Armor" or items[i].itemType == "Weapon": #Print level as well when it is armor or a weapon
+                # Print level as well when it is armor or a weapon
+                if items[i].itemType == "Armor" or items[i].itemType == "Weapon":
                     level = " level %s" % (items[i].level)
                 else:
                     level = ""
-                itemNames += ["%s%s: %s (%s), effect %s, value %s.\n" % (items[i].itemType, level, items[i].name, items[i].id, items[i].effect, items[i].value)]
+                itemNames += ["{}{}: {} ({}), effect {}, value {}.\n"format(
+                    items[i].itemType, level, items[i].name,
+                    items[i].id, items[i].effect, items[i].value
+                )]
             itemNames.sort()
             for i in itemNames:
                 message += i
@@ -388,9 +395,9 @@ class inventory:
             return None
 
 
-
 class player(creature, inventory):
     # Todo: sepparate ids and names
+
     def __init__(self, id):
         """player(id)"""
         # Starts in Cromania
@@ -666,6 +673,7 @@ Deaths: {}""".format(
 
 class item:
     """Parent class for healing items, gear."""
+
     def __init__(self, id, name, itemType, value, ownerId, inventoryId):
         """item(id, name, itemType, value, ownerId, inventoryId)"""
         # Uses same id system as NPCs
@@ -680,7 +688,7 @@ class item:
         # Inventory it's in.
         self.inventoryId = inventoryId
 
-    def changeInventory(self, newId, newOwner = False):
+    def changeInventory(self, newId, newOwner=False):
         """Changes the inventory the item is in to newId, and if newOwner is True change the owner as well."""
         inventories[self.inventoryId].dropItem(self.id)
         self.inventoryId = newId
@@ -701,6 +709,7 @@ class item:
 
 class healingItem(item):
     """Use to regenerate health."""
+
     def __init__(self, id, name, value, effect, ownerId, inventoryId):
         """healinItem(id, name, value, effect, ownerId, inventoryId)"""
         item.__init__(self, id, name, "Healing Item", value, ownerId, inventoryId)
@@ -716,6 +725,7 @@ class healingItem(item):
 
 
 class armor(item):
+
     def __init__(self, id, name, level, value, effect, ownerId, inventoryId):
         """armor(id, name, level, value, effect, ownerId, inventoryId)"""
         item.__init__(self, id, name, "Armor", value, ownerId, inventoryId)
@@ -736,6 +746,7 @@ class armor(item):
 
 class weapon(armor):
     """Really the only difference is the itemType"""
+
     def __init__(self, id, name, level, value, effect, ownerId, inventoryId):
         """weapon(id, name, level, value, effect, ownerId, inventoryId)"""
         item.__init__(self, id, name, "Weapon", value, ownerId, inventoryId)
@@ -974,7 +985,7 @@ def giveMoney(bot, update, args):
         sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
 
 
-def save(bot, update, filename = "save"):
+def save(bot, update, filename="save"):
     """Save all creatures, items, locations etc. to file [filename].pkl."""
     with open(filename + ".pkl", "wb") as output:
         pickle.dump(creatures, output, pickle.HIGHEST_PROTOCOL)
@@ -1049,6 +1060,7 @@ def reset(bot, update):
     else:
         sendMessage(bot, update, "You have to be an admin for that.")
 
+
 def viewStore(bot, update):
     """Lists all items in the shop"""
     id = getName(update)
@@ -1061,6 +1073,7 @@ def viewStore(bot, update):
         sendMessage(bot, update, content)
     else:
         sendMessage(bot, update, "The shop is currently empty!")
+
 
 def buy(bot, update, args):
     """Buy an item from the shop and move it to a players inventory"""
@@ -1088,6 +1101,7 @@ def buy(bot, update, args):
     else:
         sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
 
+
 def use(bot, update, args):
     """Use a healing item or toggle equip of armor and weapons."""
     playerId = getName(update)
@@ -1109,6 +1123,7 @@ def use(bot, update, args):
     else:
         sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
 
+
 def drop(bot, update, args):
     """Destroy an item in a player's inventory."""
     playerId = getName(update)
@@ -1126,6 +1141,7 @@ def drop(bot, update, args):
             sendMessage(bot, update, "That item is not in your inventory.")
     else:
         sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
+
 
 def viewPlayerInventory(bot, update):
     """List all items in the caller's inventory"""
@@ -1195,6 +1211,7 @@ the higher in the lists."""
         name += adj + " "
     name += choice(itemsNouns[itemLower:itemUpper])
     return name
+
 
 def fillStore(bot, update):
     """Create 5 items per player, with about their level."""
@@ -1281,7 +1298,7 @@ def coordsFormat(x, y):
 
 def getLevelXp(level):
     """Calculates xp needed for players to level up, per level."""
-    return round(level ** 1.1)+9
+    return round(level ** 1.1) + 9
 
 
 def getLevelHp(level):
@@ -1340,7 +1357,9 @@ def getId():
 def sendMessage(bot, update, message):
     """Sends a message to Telegram, keeps track of autosave, adresses user."""
     global messageCount
-    bot.sendMessage(chat_id=update.message.chat_id, text=("@{}\n{}".format(getName(update), message)))
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text=("@{}\n{}".format(getName(update), message))
+                    )
     messageCount += 1
     if messageCount % 20 == 0:
         save(bot, update, "autosave")
@@ -1408,7 +1427,7 @@ def main():
     dispatcher.add_handler(do_handler)
     save_handler = CommandHandler("save", save)
     dispatcher.add_handler(save_handler)
-    load_handler = CommandHandler("load", load, pass_args = True)
+    load_handler = CommandHandler("load", load, pass_args=True)
     dispatcher.add_handler(load_handler)
     reset_handler = CommandHandler("reset", reset)
     dispatcher.add_handler(reset_handler)
