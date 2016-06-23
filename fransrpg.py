@@ -353,7 +353,7 @@ class creature:
     Coordinates: {}".format(
                 self.name, self.id, self.level, self.hp, self.maxHp, self.damage,
                 self.armor, coordsFormat(self.x, self.y)
-            ).strip("\n"))
+            ).split("\n"))
 
 
 class inventory:
