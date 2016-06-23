@@ -1019,6 +1019,10 @@ def load(bot, update, args):
             ids = pickle.load(input)
             bank = pickle.load(input)
 
+            for inv in inventories:
+                if inv in creatures:
+                    inventories[inv] = creatures[inv]
+
             sendMessage(bot, update, "Loaded from '" + args[0] + "'. ")
     except Exception:
         sendMessage(bot, update, "Unable to load. Did you spell the filename right?")
