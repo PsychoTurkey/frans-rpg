@@ -788,7 +788,7 @@ def help(bot, update):
     Type '/load [filename]' to load the game from the given file. Legit filenames are 'save',\n\
     'autosave' and 'reset'.\n\
     Items and shop and fill do not work yet."
-    message = "\n".join(line.lstrip for line in message.split("\n"))
+    message = "\n".join(line.lstrip() for line in message.split("\n"))
     sendMessage(bot, update, message)
 
 
