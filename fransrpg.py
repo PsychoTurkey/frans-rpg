@@ -1272,15 +1272,15 @@ def fillStore(bot, update):
             effect = getItemEffect(item, level + 2)
             if item == "Healing Item":
                 # Value based on effect
-                value = round(0.02 * effect ** 2 + 0.5 * effect - 2)
+                value = getItemEffect(item, effect)
                 items[id] = healingItem(id, name, value, effect, "storeObjectId", "storeObjectId")
                 inventories["storeObjectId"].gainItem(id)
             elif item == "Weapon":
-                value = round(0.15 * effect ** 2 + 3 * effect)
+                value = getItemValue(item, effect)
                 items[id] = weapon(id, name, level, value, effect, "storeObjectId", "storeObjectId")
                 inventories["storeObjectId"].gainItem(id)
             elif item == "Armor":
-                value = round(0.15 * (2.5 * effect) ** 2 + 3 * (2.5 * effect))
+                value = getItemValue(item, effect)
                 items[id] = armor(id, name, level, value, effect, "storeObjectId", "storeObjectId")
                 inventories["storeObjectId"].gainItem(id)
     sendMessage(
@@ -1331,7 +1331,7 @@ def getLevelXp(level):
 
 def getLevelHp(level):
     """Calculates the max hp of creatues, per level."""
-    return int(0.5 * level ** 2 + 0.5 * level + 9)
+    return int(0.3 * level ** 1.65 + level + 9)
 
 
 def getItemEffect(item, level):
@@ -1342,9 +1342,23 @@ def getItemEffect(item, level):
             round(1.1 * getLevelHp(level) / (0.1 * level + 2))
         )
     elif item == "Weapon":
-        return randint(round(getLevelHp(level) / 15 * 1.1), round(getLevelHp(level) / 12 * 1.1))
+        return randint(
+            round(getLevelHp(level) / 7 * 1.1), round(getLevelHp(level) / 4 * 1.1)
+        ) + 1
     elif item == "Armor":
-        return randint(round(getLevelHp(level) / 60 * 1.1), round(getLevelHp(level) / 30 * 1.1))
+        return randint(
+            round(getLevelHp(level) / 30 * 1.1), round(getLevelHp(level) / 15 * 1.1)
+        ) + 1
+
+
+def getItemValue(item, effect):
+    """Gives amount of gold you have to pay for a certain item"""
+    if item == "Healing Item":
+        return round(0.02 * effect ** 2 + 0.5 * effect - 2)
+    if item == "Weapon":
+        return round(0.15 * effect ** 2 + 3 * effect)
+    if item == "Armor":
+        return round(0.15 * (2.5 * effect) ** 2 + 3 * (2.5 * effect))
 
 
 def getRating(level):
