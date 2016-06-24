@@ -820,7 +820,7 @@ def locationInfo(bot, update, args):
     if len(args) == 1:
         id = args[0]
         try:
-            int(id)
+            id = int(id)
         except ValueError:
             pass
 
