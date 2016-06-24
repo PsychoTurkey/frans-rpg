@@ -929,18 +929,24 @@ def deposit(bot, update, args):
         sendMessage(bot, update, "You have to be in Cromania to do that.")
         return
     if id in creatures:
-        try:
-            # Valid value?
-            amount = int(args[0])
-            # Enough money?
-            if amount <= creatures[id].gold:
-                sendMessage(bot, update, "Deposited " + str(amount) + " gold.")
-                bank[id] += amount
-                creatures[id].gold -= amount
-            else:
-                sendMessage(bot, update, "You do not have that amount of money!")
-        except ValueError:
-            sendMessage(bot, update, "You passed an invalid value!")
+        if args:
+            try:
+                # Valid value?
+                amount = int(args[0])
+                # Enough money?
+                if amount <= creatures[id].gold:
+                    sendMessage(bot, update, "Deposited " + str(amount) + " gold.")
+                    bank[id] += amount
+                    creatures[id].gold -= amount
+                else:
+                    sendMessage(bot, update, "You do not have that amount of money!")
+            except ValueError:
+                sendMessage(bot, update, "You passed an invalid value!")
+        else:
+            amount = creatures[id].gold
+            sendMessge(bot, update, "Deposited {} gold.".format(amount))
+            bank[id] += amount
+            creatures[id].gold = 0
     else:
         sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
 
@@ -952,17 +958,22 @@ def withdraw(bot, update, args):
         sendMessage(bot, update, "You have to be in Cromania to do that.")
         return
     if id in creatures:
-        try:
-            amount = int(args[0])
-            if amount <= bank[id]:
-                sendMessage(bot, update, "Withdrew " + str(amount) + " gold.")
-                creatures[id].gold += amount
-                bank[id] -= amount
-            else:
-                sendMessage(bot, update, "You do not have that amount of money!")
-        except ValueError:
-            sendMessage(bot, update, "You passed an invalid value!")
-            pass
+        if args:
+            try:
+                amount = int(args[0])
+                if amount <= bank[id]:
+                    sendMessage(bot, update, "Withdrew " + str(amount) + " gold.")
+                    creatures[id].gold += amount
+                    bank[id] -= amount
+                else:
+                    sendMessage(bot, update, "You do not have that amount of money!")
+            except ValueError:
+                sendMessage(bot, update, "You passed an invalid value!")
+        else:
+            amount = bank[id]
+            sendMessage(bot, update, "Withdrew {} gold.".format(amount))
+            creatures[id].gold += amount
+            bank[id] = 0
     else:
         sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
 
