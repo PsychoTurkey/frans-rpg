@@ -819,6 +819,11 @@ def locationInfo(bot, update, args):
     """Gives info about the location a creature (players are creatures as well) is in."""
     if len(args) == 1:
         id = args[0]
+        try:
+            int(id)
+        except ValueError:
+            pass
+
         if id in creatures:
             # Find location and use build-in info() method
             sendMessage(bot, update, locations[creatures[id].x][creatures[id].y].info())
@@ -826,8 +831,8 @@ def locationInfo(bot, update, args):
             sendMessage(bot, update, "There is no creature with that id...")
     elif len(args) == 2:
         try:
-            x = int(args[0])
-            y = int(args[1])
+            y = int(args[0])
+            x = int(args[1])
             message = locations[x][y].info()
             sendMessage(bot, update, message)
         except KeyError:
