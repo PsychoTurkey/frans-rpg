@@ -9,8 +9,6 @@ Things that really should be changed:
 - Loan function: get an amount of money (to your inventory gold), but all money you store in bank will be taken untill the loan has been repaid.
 - I don't recall ever seeing one of the last words of items adjectives and names. The algorithm should be checked and tested.
 - Have a toggleable pvp setting
-- Make it comply to PEP8 standards
 - Reference player case insensitive
-- Deposit() return message should have a capital D
 - Have players start with a weapon equipped, so that unarmed actually means no damage
 - Maybe change every "id" to "targetId", "playerId", "creatueId" etc.
