@@ -944,7 +944,7 @@ def deposit(bot, update, args):
                 sendMessage(bot, update, "You passed an invalid value!")
         else:
             amount = creatures[id].gold
-            sendMessge(bot, update, "Deposited {} gold.".format(amount))
+            sendMessage(bot, update, "Deposited {} gold.".format(amount))
             bank[id] += amount
             creatures[id].gold = 0
     else:
