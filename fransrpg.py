@@ -773,6 +773,7 @@ def help(bot, update):
     Type '/start' to see the welcome message.\n\
     Type '/stats [id]' to see that creature's stats.  Player id's are their names. Enter no id for your own stats.\n\
     Type '/location [id]' to get info about that creature's current location.\n\
+    Type '/map [radius]' to get a map with that radius around your location.\n\
     Type '/players' to see all players and their locations.\n\
     Type '/join' to create a character.\n\
     Type '/attack [id]' to attack the creature with that id.\n\
@@ -851,7 +852,25 @@ def locationInfo(bot, update, args):
 
 
 def createMap(bot, update, args):
-    sendMessage(bot, update, fransrpgmap.createMap(3, 3, "mftfcmtmf", "map.jpg"))
+    """Sends an image with the terrains from (x - r, y - r) to (x + r, y + r) with x and y player coordinates and r the radius given by the user."""
+    try:
+        r = int(args[0])
+    except:
+        sendMessage(bot, update, "You passed an invalid value!")
+        return
+    playerId = getName(update)
+    if playerId in creatures:
+        y = creatures[playerId].y
+        x = creatures[playerId].x
+        terrains = ""
+        for i in range(y + r, y - r - 1, -1):
+            for j in range(x - r, x + r + 1):
+                # x, y instead of y, x:
+                terrains += terrainToChar(j, i)
+        fransrpgmap.createMap(2 * r + 1, 2 * r + 1, terrains, "map.jpg")
+        # Send map 'map.jpg' here!!
+    else:
+        sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
 
 
 def listPlayers(bot, update):
@@ -1327,6 +1346,24 @@ def coordsFormat(x, y):
     else:
         xText = str(x) + "E"
     return yText + xText
+
+
+def terrainToChar(x, y):
+    """Returns a single letter based on the locationType of the given location; used for map generation. Returns 'u' if a location is not yet discovered."""
+    try:
+        type = locations[x][y].locationType
+        if(type == "Cromania"):
+            return "c"
+        elif(type == "Mountain"):
+            return "m"
+        elif(type == "Field"):
+            return "f"
+        # Needs to be changed to only 'Town' after issue6 merge
+        elif(type == "Road" or type == "Town"):
+            return "t"
+    except KeyError:
+        return "u"
+    
 
 
 def getLevelXp(level):

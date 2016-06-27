@@ -11,7 +11,18 @@ def createMap(y, x, terrains, filename):
 
     for i in range(y):
         for j in range(x):
-            terrain = Image.open("map/{}.bmp".format(terrains[i * 3 + j]))
+            terrain = Image.open("map/{}.bmp".format(terrains[i * x + j]))
             map.paste(terrain, (j * 256, i * 256))
+
+    if width > 1024:
+        # If width > 1024, new width = 1024 and new height = old height * (new width / old width)
+        height = round(1024 / width * height)
+        width = 1024
+        map = map.resize((width, height), Image.ANTIALIAS)
+    if height > 1024:
+        # The same for height (even if the image has been resized because of the width)
+        width = round(1024 / height * width)
+        height = 1024
+        map = map.resize((width, 1024), Image.ANTIALIAS)
     map.save(filename)
     return
