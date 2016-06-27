@@ -6,6 +6,7 @@ from random import random, choice, randint
 import pickle
 import logging
 from telegram.ext import Updater, CommandHandler
+import fransrpgmap
 
 # Telegram bot log
 logging.basicConfig(
@@ -849,6 +850,11 @@ def locationInfo(bot, update, args):
             sendMessage(bot, update, "You do not have a character yet! Create one with /join.")
 
 
+def createMap(bot, update, args):
+    # Comming up
+    sendMessage(bot, update, fransrpgmap.createMap(3, 3, "mftfcmtmf", "map.jpg"))
+
+
 def listPlayers(bot, update):
     """View all players and their coordinates."""
     message = ""
@@ -1425,6 +1431,8 @@ def main():
     dispatcher.add_handler(players_handler)
     location_handler = CommandHandler("location", locationInfo, pass_args=True)
     dispatcher.add_handler(location_handler)
+    map_handler = CommandHandler("map", createMap, pass_args=True)
+    dispatcher.add_handler(map_handler)
     stats_handler = CommandHandler("stats", stats, pass_args=True)
     dispatcher.add_handler(stats_handler)
     join_handler = CommandHandler("join", join)

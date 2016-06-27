@@ -66,5 +66,8 @@ target/
 *.swp
 *.cfg
 
-#Visual Studio Project:
+# Visual Studio Project
 FransRPGVS/
+
+# Map
+map.jpg
