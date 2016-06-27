@@ -867,6 +867,24 @@ def join(bot, update):
     if id not in creatures:
         creatures[id] = player(id)
         inventories[id] = creatures[id]
+        # Give a player a beginning weapon with level 2 stats
+        start_weapon_id = getId()
+        start_weapon_effect = getItemEffect("Weapon", 2)
+        start_weapon_value = getItemValue("Weapon", start_weapon_effect)
+        start_weapon_name = newItemName("Weapon", 1)
+        items[start_weapon_id] = weapon(
+            id, start_weapon_name, 1, start_weapon_value, start_weapon_effect, id, id
+        )
+        creatures[id].equip(start_weapon_id, start_weapon_effect)
+        # Give a player a beginning armor with level 1 stats
+        start_armor_id = getId()
+        start_armor_efffect = getItemEffect("Armor", 1)
+        start_armor_value = getItemValue("Armor", start_armor_efffect)
+        start_armor_name = newItemName("Weapon", 1)
+        items[start_armor_id] = armor(
+            id, start_armor_name, 1, start_armor_value, start_armor_efffect, id, id
+        )
+        creatures[id].equip(start_armor_id, start_armor_efffect)
         sendMessage(bot, update, "You joined the game! Your name is " + id + ".")
         fillStore(bot, update)
     else:
@@ -1343,7 +1361,7 @@ def getItemEffect(item, level):
         )
     elif item == "Weapon":
         return randint(
-            round(getLevelHp(level) / 7 * 1.1), round(getLevelHp(level) / 4 * 1.1)
+            round(getLevelHp(level) / 15 * 1.1), round(getLevelHp(level) / 12 * 1.1)
         ) + 1
     elif item == "Armor":
         return randint(
