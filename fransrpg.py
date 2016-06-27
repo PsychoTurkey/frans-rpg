@@ -1290,7 +1290,7 @@ def fillStore(bot, update):
             effect = getItemEffect(item, level + 2)
             if item == "Healing Item":
                 # Value based on effect
-                value = getItemEffect(item, effect)
+                value = getItemValue(item, effect)
                 items[id] = healingItem(id, name, value, effect, "storeObjectId", "storeObjectId")
                 inventories["storeObjectId"].gainItem(id)
             elif item == "Weapon":
