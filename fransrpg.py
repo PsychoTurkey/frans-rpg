@@ -851,7 +851,6 @@ def locationInfo(bot, update, args):
 
 
 def createMap(bot, update, args):
-    # Comming up
     sendMessage(bot, update, fransrpgmap.createMap(3, 3, "mftfcmtmf", "map.jpg"))
 
 

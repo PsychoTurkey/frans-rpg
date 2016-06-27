@@ -1,7 +1,7 @@
 from PIL import Image
 
 def createMap(y, x, terrains, filename):
-    """Generates a map of y height, x width to filename. E.g. terrain sequence: 'mftfcu' means Mountain, Field, Town, Field, Cromania, Unknown."""
+    """Generates a map of y height and x width to filename. E.g. terrain sequence: 'mftfcu' means Mountain, Field, Town, Field, Cromania, Unknown."""
     message = ""
 
     height = y * 256
