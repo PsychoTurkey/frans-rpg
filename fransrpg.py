@@ -37,7 +37,7 @@ locationTypes = {
         "Fieldguy 1-1", "Fieldguy 1-2", "Fieldguy 1-3", "Fieldguy 2-1", "Fieldguy 2-2",
         "Fieldguy 2-3", "Fieldguy 3-1", "Fieldguy 3-2", "Fieldguy 3-3"
     ],
-    "Road": [
+    "Town": [
         "Roadguy 1-1", "Roadguy 1-2", "Roadguy 1-3", "Roadguy 2-1", "Roadguy 2-2", "Roadguy 2-3",
         "Roadguy 3-1", "Roadguy 3-2", "Roadguy 3-3"
     ]
